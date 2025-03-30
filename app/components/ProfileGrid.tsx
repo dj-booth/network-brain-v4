@@ -2,10 +2,13 @@
 
 import React from 'react';
 import { ProfileCard } from './ProfileCard';
-import type { Profile } from '../types/profile';
+// import type { Profile } from '../types/profile'; // Remove old import
+import { Database } from '@/types/supabase'; // Import Supabase types
+
+type Profile = Database['public']['Tables']['profiles']['Row']; // Define Profile type from DB
 
 interface ProfileGridProps {
-  profiles: Profile[];
+  profiles: Profile[]; // Use the correct type
   onRetry?: (profileId: string) => void;
 }
 

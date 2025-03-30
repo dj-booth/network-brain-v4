@@ -2,8 +2,15 @@ import React from 'react';
 import { createServerComponentClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
 import { notFound } from 'next/navigation';
-import type { Profile } from '../../types/profile';
-import { ProfileDetail } from '../../components/ProfileDetail';
+// import type { Profile } from '../../types/profile'; // Remove old type
+import { Database } from '@/types/supabase'; // Use generated types
+import { ProfileDetail } from '../../components/ProfileDetail'; // Adjust path if needed
+
+// Define types based on generated schema
+type ProfileWithEmbeddings = Database['public']['Tables']['profiles']['Row'] & {
+  embeddings: Database['public']['Tables']['embeddings']['Row'][];
+};
+type Embedding = Database['public']['Tables']['embeddings']['Row'];
 
 // Configure route segment
 export const dynamic = 'force-dynamic';
@@ -15,8 +22,9 @@ interface ProfilePageProps {
   };
 }
 
-async function getProfile(id: string): Promise<Profile | null> {
-  const supabase = createServerComponentClient({ cookies });
+// Update function return type
+async function getProfile(id: string): Promise<ProfileWithEmbeddings | null> {
+  const supabase = createServerComponentClient<Database>({ cookies }); // Add DB type to client
   
   try {
     const { data: profile, error } = await supabase
@@ -38,8 +46,8 @@ async function getProfile(id: string): Promise<Profile | null> {
       console.error('Error fetching profile:', error);
       return null;
     }
-
-    return profile;
+    // Explicitly cast the result to ensure type correctness
+    return profile as ProfileWithEmbeddings;
   } catch (error) {
     console.error('Error in getProfile:', error);
     return null;
@@ -55,6 +63,7 @@ export default async function ProfilePage({ params }: ProfilePageProps) {
 
   return (
     <div className="min-h-screen bg-gray-50">
+      {/* Pass the profile object which now includes embeddings */}
       <ProfileDetail profile={profile} />
     </div>
   );
