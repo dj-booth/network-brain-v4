@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
 import { cookies } from 'next/headers';
-import Papa from 'papaparse';
+// import Papa from 'papaparse'; // Temporarily commented out
 import { Database } from '@/types/supabase'; // Use path alias
 
 // Define the expected structure of the mapping from the frontend
@@ -10,6 +10,11 @@ interface ColumnMapping {
 }
 
 export async function POST(request: NextRequest) {
+  // Immediately return an error indicating the feature is disabled for debugging
+  return NextResponse.json({ error: 'CSV Import temporarily disabled for build debugging.' }, { status: 503 }); // 503 Service Unavailable
+
+  // --- Rest of the code commented out for debugging ---
+  /*
   const supabase = createRouteHandlerClient<Database>({ cookies });
   const formData = await request.formData();
   const file = formData.get('csvFile') as File | null;
@@ -109,4 +114,5 @@ export async function POST(request: NextRequest) {
     console.error('Error processing CSV import:', error);
     return NextResponse.json({ error: 'An unexpected error occurred during import.', details: error.message }, { status: 500 });
   }
+  */
 } 

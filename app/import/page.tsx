@@ -1,7 +1,7 @@
 'use client';
 
 import React, { useState, ChangeEvent, FormEvent, useEffect } from 'react';
-import Papa from 'papaparse';
+// import Papa from 'papaparse'; // Temporarily commented out
 import { Database } from '@/types/supabase';
 
 // Define the type for a profile row (adjust based on your actual type)
@@ -70,34 +70,42 @@ export default function ImportPage() {
     const file = event.target.files?.[0];
     if (file) {
       setCsvFile(file);
-      setImportStatus(''); // Reset status
-      setCsvHeaders([]); // Reset headers
+      setImportStatus('CSV selected. Please verify mapping below. (Parsing disabled temporarily)'); // Updated message
+      setCsvHeaders(['header1_temp', 'header2_temp', 'header3_temp']); // Set dummy headers
       setMapping({}); // Reset mapping
 
-      // Parse headers using Papaparse on the client side
-      Papa.parse(file, {
-        header: false, // We only want the first row
-        preview: 1,    // Only parse the first row
-        complete: (results) => {
-          const headers = results.data[0] as string[];
-          setCsvHeaders(headers);
-          // Initialize mapping - default to ignore
-          const initialMapping: Record<string, ProfileColumn | ''> = {};
-          headers.forEach(header => {
-            // Basic auto-mapping attempt (optional)
-            const potentialMatch = ALL_PROFILE_COLUMNS.find(col => 
-                col.toLowerCase() === header.toLowerCase().replace(/\s+/g, '_') || // Match underscore separated
-                col.toLowerCase() === header.toLowerCase() // Match exact case-insensitive
-            );
-             initialMapping[header] = potentialMatch || '';
-          });
-          setMapping(initialMapping);
-        },
-        error: (error) => {
-            console.error("Error parsing CSV headers:", error);
-            setImportStatus(`Error reading CSV headers: ${error.message}`);
-        }
+      // // Parse headers using Papaparse on the client side
+      // Papa.parse(file, {
+      //   header: false, // We only want the first row
+      //   preview: 1,    // Only parse the first row
+      //   complete: (results) => {
+      //     const headers = results.data[0] as string[];
+      //     setCsvHeaders(headers);
+      //     // Initialize mapping - default to ignore
+      //     const initialMapping: Record<string, ProfileColumn | ''> = {};
+      //     headers.forEach(header => {
+      //       // Basic auto-mapping attempt (optional)
+      //       const potentialMatch = ALL_PROFILE_COLUMNS.find(col => 
+      //           col.toLowerCase() === header.toLowerCase().replace(/\s+/g, '_') || // Match underscore separated
+      //           col.toLowerCase() === header.toLowerCase() // Match exact case-insensitive
+      //       );
+      //        initialMapping[header] = potentialMatch || '';
+      //     });
+      //     setMapping(initialMapping);
+      //   },
+      //   error: (error) => {
+      //       console.error("Error parsing CSV headers:", error);
+      //       setImportStatus(`Error reading CSV headers: ${error.message}`);
+      //   }
+      // });
+
+      // Temporary: Set up basic mapping for dummy headers
+      const initialMapping: Record<string, ProfileColumn | ''> = {};
+      ['header1_temp', 'header2_temp', 'header3_temp'].forEach(header => {
+        initialMapping[header] = ''; // Default to ignore
       });
+      setMapping(initialMapping);
+
     }
   };
 
@@ -111,37 +119,40 @@ export default function ImportPage() {
       setImportStatus('Please select a CSV file.');
       return;
     }
+    
+    setImportStatus('Import functionality temporarily disabled while debugging build issues.');
+    return; // Disable submission temporarily
 
-    setIsLoading(true);
-    setImportStatus('Importing...');
+    // setIsLoading(true);
+    // setImportStatus('Importing...');
 
-    const formData = new FormData();
-    formData.append('csvFile', csvFile);
-    formData.append('mapping', JSON.stringify(mapping));
+    // const formData = new FormData();
+    // formData.append('csvFile', csvFile);
+    // formData.append('mapping', JSON.stringify(mapping));
 
-    try {
-      const response = await fetch('/api/import', {
-        method: 'POST',
-        body: formData,
-      });
+    // try {
+    //   const response = await fetch('/api/import', {
+    //     method: 'POST',
+    //     body: formData,
+    //   });
 
-      const result = await response.json();
+    //   const result = await response.json();
 
-      if (!response.ok) {
-        setImportStatus(`Import failed: ${result.error || 'Unknown error'}${result.details ? ": " + JSON.stringify(result.details) : ""}`);
-      } else {
-        setImportStatus(`Import successful! ${result.importedCount} profiles imported/updated. ${result.message || ''}`);
-        // Optionally reset form
-        // setCsvFile(null);
-        // setCsvHeaders([]);
-        // setMapping({});
-      }
-    } catch (error: any) {
-      console.error('Import fetch error:', error);
-      setImportStatus(`An error occurred: ${error.message}`);
-    } finally {
-      setIsLoading(false);
-    }
+    //   if (!response.ok) {
+    //     setImportStatus(`Import failed: ${result.error || 'Unknown error'}${result.details ? ": " + JSON.stringify(result.details) : ""}`);
+    //   } else {
+    //     setImportStatus(`Import successful! ${result.importedCount} profiles imported/updated. ${result.message || ''}`);
+    //     // Optionally reset form
+    //     // setCsvFile(null);
+    //     // setCsvHeaders([]);
+    //     // setMapping({});
+    //   }
+    // } catch (error: any) {
+    //   console.error('Import fetch error:', error);
+    //   setImportStatus(`An error occurred: ${error.message}`);
+    // } finally {
+    //   setIsLoading(false);
+    // }
   };
 
   return (
@@ -151,7 +162,7 @@ export default function ImportPage() {
       <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 rounded shadow-md">
         <div>
           <label htmlFor="csvFile" className="block text-sm font-medium text-gray-700 mb-1">
-            CSV File
+            CSV File (Parsing Disabled for Debugging)
           </label>
           <input
             type="file"
@@ -165,7 +176,7 @@ export default function ImportPage() {
 
         {csvHeaders.length > 0 && (
           <div>
-            <h2 className="text-lg font-semibold mb-3">Map CSV Columns to Database Fields</h2>
+            <h2 className="text-lg font-semibold mb-3">Map CSV Columns to Database Fields (Dummy Headers)</h2>
             <p className="text-sm text-gray-600 mb-4">Select the corresponding database field for each column in your CSV. Choose "-- Ignore --" to skip a column.</p>
             <div className="overflow-x-auto">
               <table className="min-w-full divide-y divide-gray-200 border">
@@ -180,7 +191,7 @@ export default function ImportPage() {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {csvHeaders.map((header) => {
+                  {csvHeaders.map((header: string) => { 
                     const isMapped = mapping[header] !== '';
                     return (
                       <tr key={header}>
@@ -210,16 +221,16 @@ export default function ImportPage() {
            <div>
              <button
                type="submit"
-               disabled={isLoading}
+               disabled={isLoading || true} // Disable button
                className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
              >
-               {isLoading ? 'Importing...' : 'Import Data'}
+               {isLoading ? 'Importing...' : 'Import Data (Disabled)'}
              </button>
            </div>
         )}
        
         {importStatus && (
-          <div className={`mt-4 p-4 rounded ${importStatus.startsWith('Import successful') ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}`}>
+          <div className={`mt-4 p-4 rounded ${importStatus.startsWith('Import successful') ? 'bg-green-100 text-green-800' : importStatus.includes('disabled') ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'}`}>
             <p>{importStatus}</p>
           </div>
         )}
