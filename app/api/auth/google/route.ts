@@ -13,38 +13,36 @@ const JWT_SECRET = process.env.JWT_SECRET;
 const ADMIN_EMAIL = process.env.ADMIN_EMAIL; // The specific email allowed to use the extension
 
 // Allow specific Chrome extension origin
-const ALLOWED_ORIGINS = [
-    'chrome-extension://pofgfedjebidalhfhhfdbajjihnfamen'
-];
+const ALLOWED_ORIGIN = 'chrome-extension://pofgfedjebidalhfhhfdbajjihnfamen'; // Use single value
+
+// Helper to add CORS headers
+function addCorsHeaders(response: NextResponse, requestOrigin: string | null) {
+  if (requestOrigin === ALLOWED_ORIGIN) {
+    response.headers.set('Access-Control-Allow-Origin', ALLOWED_ORIGIN);
+    response.headers.set('Access-Control-Allow-Credentials', 'true');
+    response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, Origin');
+    response.headers.set('Access-Control-Max-Age', '86400'); // 24 hours
+  }
+  return response;
+}
 
 export async function POST(request: Request) {
-    console.log("Received request on /api/auth/google");
-
-    // Handle CORS
-    const origin = request.headers.get('origin') || '';
-    const isAllowedOrigin = ALLOWED_ORIGINS.includes(origin);
-    
-    // Default headers
-    const headers: Record<string, string> = {
-        'Access-Control-Allow-Credentials': 'true',
-        'Content-Type': 'application/json',
-    };
-    
-    // Add CORS headers if origin is allowed
-    if (isAllowedOrigin) {
-        headers['Access-Control-Allow-Origin'] = origin;
-    }
+    console.log("Received POST request on /api/auth/google");
+    const origin = request.headers.get('origin');
 
     if (!process.env.GOOGLE_CLIENT_ID || !JWT_SECRET || !ADMIN_EMAIL) {
         console.error("Server Configuration Error: Missing GOOGLE_CLIENT_ID, JWT_SECRET, or ADMIN_EMAIL");
-        return NextResponse.json({ error: 'Server configuration error' }, { status: 500, headers });
+        const response = NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
+        return addCorsHeaders(response, origin);
     }
 
     try {
         const { token: googleToken } = await request.json(); // Expecting { "token": "GOOGLE_ID_TOKEN" }
 
         if (!googleToken) {
-            return NextResponse.json({ error: 'Missing Google ID token' }, { status: 400, headers });
+            const response = NextResponse.json({ error: 'Missing Google ID token' }, { status: 400 });
+             return addCorsHeaders(response, origin);
         }
 
         // Verify the Google ID token
@@ -56,7 +54,8 @@ export async function POST(request: Request) {
 
         if (!payload || !payload.email) {
             console.error("Google token verification failed: No payload or email.");
-            return NextResponse.json({ error: 'Invalid Google token' }, { status: 401, headers });
+            const response = NextResponse.json({ error: 'Invalid Google token' }, { status: 401 });
+            return addCorsHeaders(response, origin);
         }
 
         const userEmail = payload.email;
@@ -66,7 +65,8 @@ export async function POST(request: Request) {
         // Ensure the authenticated user is the designated admin
         if (userEmail !== ADMIN_EMAIL) {
             console.warn(`Authorization Failed: User ${userEmail} is not the designated admin.`);
-            return NextResponse.json({ error: 'Unauthorized user' }, { status: 403, headers }); // Forbidden
+            const response = NextResponse.json({ error: 'Unauthorized user' }, { status: 403 }); // Forbidden
+             return addCorsHeaders(response, origin);
         }
 
         // --- JWT Generation ---
@@ -80,31 +80,20 @@ export async function POST(request: Request) {
         const appJwt = jwt.sign(appJwtPayload, JWT_SECRET, { expiresIn: '1d' }); // Token valid for 1 day
 
         console.log(`JWT generated successfully for ${userEmail}`);
-        return NextResponse.json({ jwt: appJwt }, { status: 200, headers });
+        const response = NextResponse.json({ jwt: appJwt }, { status: 200 });
+         return addCorsHeaders(response, origin);
 
     } catch (error) {
         console.error("Error during Google token verification or JWT generation:", error);
-        return NextResponse.json({ error: 'Authentication failed' }, { status: 500, headers });
+        const response = NextResponse.json({ error: 'Authentication failed' }, { status: 500 });
+         return addCorsHeaders(response, origin);
     }
 }
 
 // Handle preflight OPTIONS request
 export async function OPTIONS(request: Request) {
-    const origin = request.headers.get('origin') || '';
-    const isAllowedOrigin = ALLOWED_ORIGINS.includes(origin);
-    
-    // Default headers for OPTIONS
-    const headers: Record<string, string> = {
-        'Access-Control-Allow-Methods': 'POST, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-        'Access-Control-Allow-Credentials': 'true',
-        'Access-Control-Max-Age': '86400', // 24 hours
-    };
-    
-    // Add CORS origin if allowed
-    if (isAllowedOrigin) {
-        headers['Access-Control-Allow-Origin'] = origin;
-    }
-    
-    return new NextResponse(null, { status: 204, headers });
+    console.log("Received OPTIONS request on /api/auth/google");
+    const origin = request.headers.get('origin');
+    const response = new NextResponse(null, { status: 204 });
+    return addCorsHeaders(response, origin);
 } 

@@ -12,40 +12,38 @@ import jwt from 'jsonwebtoken'; // Import jsonwebtoken
 const JWT_SECRET = process.env.JWT_SECRET;
 
 // Allow specific Chrome extension origin
-const ALLOWED_ORIGINS = [
-  'chrome-extension://pofgfedjebidalhfhhfdbajjihnfamen'
-];
+const ALLOWED_ORIGIN = 'chrome-extension://pofgfedjebidalhfhhfdbajjihnfamen'; // Use single value
+
+// Helper to add CORS headers
+function addCorsHeaders(response: NextResponse, requestOrigin: string | null) {
+  if (requestOrigin === ALLOWED_ORIGIN) {
+    response.headers.set('Access-Control-Allow-Origin', ALLOWED_ORIGIN);
+    response.headers.set('Access-Control-Allow-Credentials', 'true');
+    response.headers.set('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    response.headers.set('Access-Control-Allow-Headers', 'Content-Type, Authorization, Origin');
+    response.headers.set('Access-Control-Max-Age', '86400'); // 24 hours
+  }
+  return response;
+}
 
 // TODO: Define expected request body structure using Zod or interfaces
 // interface IngestPayload { ... }
 
 export async function POST(request: Request) {
-  console.log("Received request on /api/profiles/ingest");
-
-  // Handle CORS
-  const origin = request.headers.get('origin') || '';
-  const isAllowedOrigin = ALLOWED_ORIGINS.includes(origin);
-  
-  // Default headers
-  const headers: Record<string, string> = {
-    'Access-Control-Allow-Credentials': 'true',
-    'Content-Type': 'application/json',
-  };
-  
-  // Add CORS headers if origin is allowed
-  if (isAllowedOrigin) {
-    headers['Access-Control-Allow-Origin'] = origin;
-  }
+  console.log("Received POST request on /api/profiles/ingest");
+  const origin = request.headers.get('origin');
 
   // 1. Authentication: Verify JWT token
   if (!JWT_SECRET) {
     console.error("Server Configuration Error: JWT_SECRET is not set.");
-    return NextResponse.json({ error: 'Server configuration error' }, { status: 500, headers });
+    const response = NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
+    return addCorsHeaders(response, origin);
   }
   const authHeader = request.headers.get('Authorization');
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     console.error("Authentication error: No Bearer token provided.");
-    return NextResponse.json({ error: 'Unauthorized: Missing token' }, { status: 401, headers });
+    const response = NextResponse.json({ error: 'Unauthorized: Missing token' }, { status: 401 });
+    return addCorsHeaders(response, origin);
   }
   const token = authHeader.split(' ')[1];
 
@@ -57,19 +55,20 @@ export async function POST(request: Request) {
     // Optional: Perform necessary checks on decoded payload 
     // if (decoded.email !== process.env.ADMIN_EMAIL) { ... }
 
-    // console.log("Simulating JWT verification for token:", token); // Placeholder removed
-
   } catch (error) {
     console.error("Authentication error: Invalid token", error);
-    // Handle specific JWT errors (e.g., TokenExpiredError)
+    let errorResponse;
     if (error instanceof jwt.TokenExpiredError) {
-        return NextResponse.json({ error: 'Unauthorized: Token expired' }, { status: 401, headers });
+        errorResponse = NextResponse.json({ error: 'Unauthorized: Token expired' }, { status: 401 });
     }
-    if (error instanceof jwt.JsonWebTokenError) {
-         return NextResponse.json({ error: 'Unauthorized: Invalid token' }, { status: 401, headers });
+    else if (error instanceof jwt.JsonWebTokenError) {
+         errorResponse = NextResponse.json({ error: 'Unauthorized: Invalid token' }, { status: 401 });
     }
-    // Generic fallback
-    return NextResponse.json({ error: 'Unauthorized: Invalid token' }, { status: 401, headers });
+    else {
+      // Generic fallback
+       errorResponse = NextResponse.json({ error: 'Unauthorized: Invalid token' }, { status: 401 });
+    }
+     return addCorsHeaders(errorResponse, origin);
   }
 
   // 2. Data Parsing and Validation
@@ -82,14 +81,16 @@ export async function POST(request: Request) {
     // Adjust field names based on actual payload
     if (!payload.name || !payload.linkedin_profile_url) { 
         console.error("Validation Error: Missing required fields (name or linkedin_profile_url)");
-        return NextResponse.json({ error: 'Bad Request: Missing required fields' }, { status: 400, headers });
+        const response = NextResponse.json({ error: 'Bad Request: Missing required fields' }, { status: 400 });
+         return addCorsHeaders(response, origin);
     }
     
     // TODO: More robust validation using Zod against the Supabase schema
 
   } catch (error) {
     console.error("Error parsing request body:", error);
-    return NextResponse.json({ error: 'Bad Request: Invalid JSON' }, { status: 400, headers });
+    const response = NextResponse.json({ error: 'Bad Request: Invalid JSON' }, { status: 400 });
+     return addCorsHeaders(response, origin);
   }
 
   // 3. Data Ingestion into Supabase
@@ -117,35 +118,24 @@ export async function POST(request: Request) {
     // }
 
     // console.log('Supabase Insert Success:', data);
-    // return NextResponse.json({ success: true, profileId: data ? data[0].id : null }, { status: 201 });
+    // const response = NextResponse.json({ success: true, profileId: data ? data[0].id : null }, { status: 201 });
 
     console.log("Simulating Supabase insert."); // Placeholder
-    return NextResponse.json({ success: true, profileId: 'dummy-uuid-' + Date.now() }, { status: 201, headers }); // Placeholder response
+    const response = NextResponse.json({ success: true, profileId: 'dummy-uuid-' + Date.now() }, { status: 201 }); // Placeholder response
+    return addCorsHeaders(response, origin);
 
   } catch (error) {
     console.error("Error ingesting data into Supabase:", error);
     // Differentiate between validation errors and server errors if needed
-    return NextResponse.json({ error: 'Internal Server Error' }, { status: 500, headers });
+    const response = NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
+     return addCorsHeaders(response, origin);
   }
 }
 
 // Handle preflight OPTIONS request
 export async function OPTIONS(request: Request) {
-  const origin = request.headers.get('origin') || '';
-  const isAllowedOrigin = ALLOWED_ORIGINS.includes(origin);
-  
-  // Default headers for OPTIONS
-  const headers: Record<string, string> = {
-    'Access-Control-Allow-Methods': 'POST, OPTIONS',
-    'Access-Control-Allow-Headers': 'Content-Type, Authorization',
-    'Access-Control-Allow-Credentials': 'true',
-    'Access-Control-Max-Age': '86400', // 24 hours
-  };
-  
-  // Add CORS origin if allowed
-  if (isAllowedOrigin) {
-    headers['Access-Control-Allow-Origin'] = origin;
-  }
-  
-  return new NextResponse(null, { status: 204, headers });
+  console.log("Received OPTIONS request on /api/profiles/ingest");
+  const origin = request.headers.get('origin');
+  const response = new NextResponse(null, { status: 204 });
+  return addCorsHeaders(response, origin);
 } 
