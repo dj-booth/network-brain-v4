@@ -1,0 +1,86 @@
+---
+description: Apply these rules when making changes to the project
+globs:
+alwaysApply: true
+---
+
+Update this rule if user requested changes to the project requirement, etc.
+# Implementation plan
+
+## Phase 1: Environment Setup
+
+1. **Prevalidation:** Check if the current directory is already initialized as a project (e.g., check for package.json or existing directories) to avoid reinitialization. *(Reference: Next Steps v4, general best practices)*
+2. **Check Node.js Version:** Verify that Node.js v20.2.1 is installed by running `node -v`. If not installed, download and install Node.js v20.2.1. *(Reference: Tech Stack: Core Tools)
+3. **Initialize React Native Project:** Create the React Native admin UI project. For example, run `npx react-native init AdminUI --template react-native-template-typescript` in the project root. *(Reference: Tech Stack: Frontend, UI/UX Requirements)
+4. **Initialize Next.js Project:** Create a new Next.js project for the possible SSR/web dashboard using Next.js 14 (required version for compatibility with AI coding tools). Run:
+   ```bash
+   npx create-next-app@14 network-brain-dashboard --typescript
+   ```
+   *(Reference: Tech Stack: Frontend, Next.js note)
+5. **Initialize Git Repository:** In the project root, run `git init` to set up a new Git repository if one does not exist already. *(Reference: Next Steps v4)
+6. **Cursor MCP Configuration - Directory Precheck:** Check if a `.cursor` directory exists in the project root. If not, create it by running `mkdir .cursor`.
+7. **Cursor MCP Configuration - Create File:** In the `.cursor` directory, create a file named `mcp.json` if it does not exist. Open the file for editing. *(Reference: Cursor Configuration instructions)
+8. **Cursor MCP Configuration - Setup (macOS):** If using macOS, add the following JSON configuration inside `.cursor/mcp.json`:
+   ```json
+   { "mcpServers": { "supabase": { "command": "npx", "args": ["-y", "@modelcontextprotocol/server-postgres", "<connection-string>"] } } }
+   ```
+   *(Reference: Tech Stack: MCP Configuration)
+9. **Cursor MCP Configuration - Setup (Windows):** If using Windows, add the following JSON configuration inside `.cursor/mcp.json`:
+   ```json
+   { "mcpServers": { "supabase": { "command": "cmd", "args": ["/c", "npx", "-y", "@modelcontextprotocol/server-postgres", "<connection-string>"] } } }
+   ```
+   *(Reference: Tech Stack: MCP Configuration)
+10. **Display Connection String Link:** Inform the user to obtain their Supabase connection string from [this link](https://supabase.com/docs/guides/getting-started/mcp#connect-to-supabase-using-mcp). After they provide the connection string, replace `<connection-string>` in the above configuration with the actual string. *(Reference: Cursor MCP Setup instructions)
+11. **Validate MCP Connection:** Navigate to Settings/MCP in Cursor and verify that the MCP server shows a green active status once connected. *(Reference: Cursor MCP Configuration)
+
+## Phase 2: Frontend Development
+
+12. **React Native UI Setup - Directory Structure:** Create the following directory structure within the React Native project:
+    - `/src/components` for reusable components
+    - `/src/screens` for Dashboard, Profile View, and Email Interface screens
+    *(Reference: UI/UX Requirements, Tech Stack: Frontend)
+13. **Dashboard Component:** Create `/src/screens/Dashboard.tsx` that displays an overview of recent profiles, introductions, and pending tasks. *(Reference: Key Features: Admin UI - Dashboard)
+14. **Profile View Component:** Create `/src/screens/ProfileView.tsx` to show structured profile data, MCP-scraped enrichment details, AI-generated embeddings, and an editable credibility score field. *(Reference: Key Features: Admin UI - Profile View)
+15. **Email Interface Component:** Create `/src/screens/EmailInterface.tsx` allowing admins to compose and draft emails with Gmail OAuth integration. *(Reference: Key Features: Admin UI - Email Interface)
+16. **Apply UI Color Scheme:** In your global styles file (e.g., `/src/styles/global.ts`), set the colors per requirements: 
+    - Background: RGB(243,244,246)
+    - Text: RGB(66,66,69)
+    - Buttons/Accents: RGB(255,196,3)
+    *(Reference: UI/UX Requirements)
+17. **WYSIWYG Editor Integration:** Integrate a WYSIWYG editor component in the Profile View for editing AI-generated embeddings. *(Reference: Key Features: AI-Generated Embeddings)
+18. **Error Display Component:** Create an error banner component (e.g., `/src/components/ErrorBanner.tsx`) to prominently display error messages on user profiles. *(Reference: UI/UX Requirements)
+19. **Google OAuth Button:** In the login screen (if applicable for Next.js or initial admin login), create a Google OAuth authentication button. *(Reference: Non-Functional Requirements, Key Features: Gmail Integration)
+20. **Validation:** Run the React Native packager and test each screen visually using a simulator/emulator to ensure UI elements load correctly.
+
+## Phase 3: Backend Development
+
+21. **Database Schema Creation:** Using PostgreSQL in Supabase, create the following tables with the specified columns:
+    - `profiles`: (id, full_name, contact_info, linkedin, location, referral_source, job_preferences, skills, interests, summaries, transcripts, credibility_score, created_at, updated_at)
+    - `embeddings`: (id, profile_id, type, content, admin_edit_flag, last_edited_at)
+    - `introductions`: (id, from_profile_id, to_profile_id, status, method, intro_draft_id, created_at, sent_at)
+    - `email_logs`: (id, profile_id, subject, body, sent_at, bcc_logged_flag)
+    - `audit_logs`: (id, profile_id, action_type, metadata, performed_by, timestamp)
+    *(Reference: Database Schema: PostgreSQL, PRD: Key Features)
+22. **Supabase Client Setup:** Create a centralized Supabase client in `/src/lib/supabaseClient.ts` and use it across backend API endpoints. *(Reference: Postmortem Learnings: API Structure)
+23. **Type Definitions with Zod:** Define all types using Zod for runtime validation. Create a file `/src/types/index.ts` and define types for Profiles, Embeddings, Introductions, Email Logs, and Audit Logs. *(Reference: Postmortem Learnings: Type Safety)
+24. **Webhook for Data Capture:** Create an API endpoint at `/api/webhooks/typeform.ts` (or similar) to accept Formless.ai (Typeform) submissions forwarded via Zapier and insert them into the `profiles` table. *(Reference: Key Features: Data Capture)
+25. **MCP Scraper Integration:** Develop a service in `/src/services/mcpScraper.ts` that triggers automatic web scraping via the browser-based MCP server for LinkedIn profiles. Ensure that it enforces a daily limit of 50 scrapes. Include logic for initial scrape on profile creation and a re-scrape every 3 months. *(Reference: Key Features: Profile Enrichment)
+26. **AI Embedding Engine Integration:** Create API endpoints in `/api/embeddings` for generating AI-based introduction drafts, lists of introductions sought, and reasons to introduce. Ensure data is saved in the `embeddings` table and flagged for admin edits where necessary. *(Reference: Key Features: AI-Generated Embeddings)
+27. **Gmail OAuth and Email Sending:** Develop an API endpoint at `/api/email` that integrates with Gmail OAuth. This endpoint should draft and send emails, ensuring that all sent emails are BCC’d to `intros@somethingnew.nz` and log the activity in the `email_logs` table. *(Reference: Key Features: Gmail Integration)
+28. **Audit Logging:** Implement middleware or service logic that logs every profile creation/edition, credibility score change, embedding edit, MCP scrape event, and email draft/send into the `audit_logs` table. *(Reference: Key Features: Logging and Audit Trail)
+29. **Testing Infrastructure Setup:** Install and set up testing frameworks (e.g., Jest for APIs). Create sample tests for endpoints in `/tests/api/` to ensure they return expected responses. *(Reference: Next Steps v4: Testing)
+
+## Phase 4: Integration
+
+30. **Connect Frontend to Backend APIs:** In the React Native and Next.js frontends, add API calls (using axios or fetch) to interact with backend endpoints (e.g., data capture webhook, MCP scraper trigger, email sending endpoint). *(Reference: App Flow, Backend Development)
+31. **Implement Google OAuth Flow:** Ensure that the Google OAuth button in the frontend properly redirects and authenticates against the backend authentication endpoints. *(Reference: Non-Functional Requirements: Security)
+32. **Integration Testing:** Manually trigger and test the full flow: submit a Typeform submission via Zapier, verify it appears in Supabase, trigger an MCP scrape, generate AI embeddings, and simulate an email send. *(Reference: Key Features: Integration Testing)
+
+## Phase 5: Deployment
+
+33. **Deploy Backend to Supabase:** Configure and deploy the backend database tables and API endpoints via Supabase. Verify that all connections (including the MCP server configuration) function correctly. *(Reference: Tech Stack: Backend, Deployment)
+34. **Deploy Next.js Dashboard to Vercel:** Push the Next.js project to a repository and deploy it on Vercel. Ensure it is connected correctly to the backend and Supabase. *(Reference: Tech Stack: Deployment, Key Features: Gmail Integration)
+35. **Set Up CI/CD Pipeline:** Implement a CI/CD pipeline using a service such as GitHub Actions. Configure it to run tests on every push and deploy automatically upon merging to the main branch. *(Reference: Postmortem Learnings: CI/CD, Next Steps v4)
+36. **Final Validation:** Run end-to-end tests (e.g., using Cypress) to validate that the entire workflow (data capture, profile enrichment, AI embedding generation, email sending, and audit logging) functions as expected. *(Reference: Q&A: Pre-Launch Checklist)
+
+This plan covers setting up the environment, developing both frontend and backend components, integrating them, and deploying the solution. Follow each step carefully and validate after completing each phase to ensure smooth progress.

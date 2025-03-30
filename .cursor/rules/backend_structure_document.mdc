@@ -1,0 +1,233 @@
+---
+description: Apply these rules when making changes to the project
+globs:
+alwaysApply: true
+---
+
+Update this rule if user requested changes to the project requirement, etc.
+# Backend Structure Document
+
+This document outlines the backend architecture and infrastructure for Network Brain v4 – an admin-only backend tool focused on capturing, enriching, and leveraging contextual information about individuals. The following sections detail every aspect of the backend structure, from architectural design to security protocols, ensuring clarity for both technical and non-technical audiences.
+
+## 1. Backend Architecture
+
+The backend is designed using modern, cloud-enabled architectures that prioritize scalability, maintainability, and performance. Key aspects include:
+
+- **Design Patterns & Frameworks:**
+  - Uses a Backend-as-a-Service model through Supabase, which leverages PostgreSQL as its main database.
+  - A modular design pattern that clearly separates concerns (data capture, enrichment, AI embedding, communication integration, and logging).
+  - Integration with external services such as Zapier, MCP server (for web scraping), Google OAuth, and the AI Embedding Engine.
+
+- **Scalability & Performance:**
+  - The architecture is set up to handle daily operations like processing up to 50 profile scrapes and automatic enrichment, while scaling horizontally as data grows.
+  - Use of caching (when applicable) and cloud-driven load balancing ensures quick response times and smooth user operations.
+
+- **Maintainability:**
+  - Employs a consistent coding standard with clear type definitions and interfaces (thanks to TypeScript and potential use of tools like Zod for runtime validation).
+  - Dedicated API endpoints and a centralized Supabase client help maintain consistency throughout the application.
+
+## 2. Database Management
+
+Supabase provides both backend services and database management with PostgreSQL at its core. Data is stored, structured, and managed while ensuring reliable access and regular backups. Key points include:
+
+- **Database Technologies Used:**
+  - **SQL Database:** PostgreSQL via Supabase.
+
+- **Data Structuring & Storage:**
+  - Data is systematically organized into tables that represent profiles, embeddings, introductions, email logs, and audit logs.
+  - Incorporates practices such as referential integrity (e.g., cascading deletions) and timestamping for audit trails.
+
+- **Data Management Practices:**
+  - Regular and automated tasks like scraping and re-scraping ensure data is up-to-date.
+  - Extensive logging ensures every action is tracked and audit-ready.
+
+## 3. Database Schema
+
+The following is a human-readable overview of the database schema and a summary in SQL for those familiar with relational databases:
+
+### Human-Readable Overview:
+
+- **Profiles Table:** Contains personal information and contextual data of individuals.
+- **Embeddings Table:** Stores AI-generated content including introduction drafts and reasons to introduce. It’s linked to profiles and indicates if an admin made edits.
+- **Introductions Table:** Manages information on who gets introduced to whom, including status and method details.
+- **Email Logs Table:** Captures logs for emails sent, including subjects, bodies, and logging status.
+- **Audit Logs Table:** Keeps a detailed log of all user actions and admin interventions to ensure auditability.
+
+### SQL Schema (PostgreSQL):
+
+-- Profiles table
+CREATE TABLE profiles (
+  id UUID PRIMARY KEY,
+  full_name TEXT NOT NULL,
+  email TEXT,
+  phone TEXT,
+  linkedin TEXT,
+  location TEXT,
+  referral_source TEXT,
+  current_plan TEXT,
+  startup_name TEXT,
+  cofounders_context TEXT,
+  startup_differentiator TEXT,
+  startup_validation TEXT,
+  job_search_preferences TEXT,
+  inspiring_companies TEXT,
+  hypothetical_startup_idea TEXT,
+  timeline_to_start TEXT,
+  skillset TEXT,
+  skillset_extra TEXT,
+  additional_interests TEXT,
+  desired_introductions TEXT,
+  long_term_goal TEXT,
+  nomination TEXT,
+  new_start_behavior TEXT,
+  discomfort_trigger TEXT,
+  group_dynamics TEXT,
+  core_values TEXT,
+  motivation_type TEXT,
+  stress_response TEXT,
+  focus_area TEXT,
+  self_description TEXT,
+  decision_style TEXT,
+  failure_response TEXT,
+  final_notes TEXT,
+  sentiment TEXT,
+  summary TEXT,
+  transcript TEXT,
+  submitted_at TIMESTAMP,
+  completed BOOLEAN,
+  credibility_score NUMERIC(5,3),
+  profile_created_at TIMESTAMP DEFAULT now(),
+  last_scraped_at TIMESTAMP
+);
+
+-- Embeddings table
+CREATE TABLE embeddings (
+  id UUID PRIMARY KEY,
+  profile_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+  type TEXT CHECK (type IN ('intro_draft', 'intro_sought', 'reason_to_introduce')),
+  content TEXT,
+  is_edited_by_admin BOOLEAN DEFAULT false,
+  last_edited_at TIMESTAMP
+);
+
+-- Introductions table
+CREATE TABLE introductions (
+  id UUID PRIMARY KEY,
+  from_profile_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+  to_profile_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+  status TEXT CHECK (status IN ('suggested', 'sent', 'opted_in', 'declined')),
+  method TEXT CHECK (method IN ('email', 'in_person', 'other')),
+  intro_draft_id UUID REFERENCES embeddings(id),
+  created_at TIMESTAMP DEFAULT now(),
+  sent_at TIMESTAMP
+);
+
+-- Email Logs table
+CREATE TABLE email_logs (
+  id UUID PRIMARY KEY,
+  profile_id UUID REFERENCES profiles(id) ON DELETE SET NULL,
+  email_subject TEXT,
+  email_body TEXT,
+  sent_at TIMESTAMP,
+  bcc_logged BOOLEAN DEFAULT false
+);
+
+-- Audit Logs table
+CREATE TABLE audit_logs (
+  id UUID PRIMARY KEY,
+  profile_id UUID REFERENCES profiles(id) ON DELETE CASCADE,
+  action_type TEXT, -- examples: edit_profile, adjust_score, send_email
+  action_metadata JSONB,
+  performed_by TEXT, -- Admin email or user ID
+  timestamp TIMESTAMP DEFAULT now()
+);
+
+## 4. API Design and Endpoints
+
+The APIs follow a RESTful approach to ensure simplicity and consistency. Key endpoints include:
+
+- **Profiles API:**
+  - Endpoint to create, read, update, and delete profile records.
+  - Triggers for automated actions like initial and periodic scraping.
+
+- **Embeddings API:**
+  - Endpoints to retrieve AI-generated content and allow admin edits.
+  - Maintains whether an embedding has been manually adjusted.
+
+- **Introductions API:**
+  - Facilitates the creation of introductions between profiles.
+  - Tracks status and method of introduction (email, in-person, or other).
+
+- **Email Logs API:**
+  - Logs all email communications including drafting via Gmail OAuth integration.
+
+- **Audit Logs API:**
+  - Provides comprehensive logs of all actions taken for audit trail purposes.
+
+Each endpoint ensures error handling is consistent, and type-safe interfaces are defined for request/response models. Special webhook routes also incorporate dedicated type interfaces.
+
+## 5. Hosting Solutions
+
+The project leverages cloud-based hosting solutions for both the frontend and backend to ensure global availability, performance, and scalability. Key choices include:
+
+- **Supabase:**
+  - Handles the core database and backend services with managed PostgreSQL.
+  - Benefits include automated scaling, reliability, and integrated security features.
+
+- **Vercel:**
+  - Hosts the frontend (Next.js) and acts as the point of interaction for admin users via React Native hybrid interfaces.
+  - Provides seamless deployment, edge caching, and cost-effective scalability.
+
+## 6. Infrastructure Components
+
+A series of infrastructure components work together to maintain performance and a smooth user experience:
+
+- **Load Balancers:** Automated load balancing via cloud services to distribute and manage incoming traffic effectively.
+- **Caching Mechanisms:** Integrated caching at both the database and application layers helps reduce query times and enhances performance.
+- **Content Delivery Network (CDN):** Served through Vercel to ensure fast content load times across different geographical regions.
+- **External Integrations:**
+  - Zapier facilitates the automation of data capture from Formless.ai.
+  - MCP server performs the browser-based scraping for profile enrichment.
+
+## 7. Security Measures
+
+Security remains a top priority with multiple layers of protection:
+
+- **Authentication & Authorization:**
+  - Google OAuth is used for secure login and session management.
+  - Only a single admin user is initially supported, ensuring controlled access.
+
+- **Data Encryption & Secure Storage:**
+  - Data in transit and at rest is encrypted as per best practices provided by cloud service providers.
+  - Comprehensive logging and audit trails ensure transparency and accountability.
+
+- **API Security:**
+  - Endpoints are secured with consistent error handling and well-defined type interfaces.
+  - Integration points (like Gmail OAuth and external APIs) adhere to industry-standard protocols.
+
+## 8. Monitoring and Maintenance
+
+Active monitoring and maintenance are in place to keep the system running efficiently:
+
+- **Monitoring Tools:**
+  - Supabase provides real-time monitoring tools for database performance and query optimization.
+  - Additional logging and error tracking services monitor API performance and server health.
+
+- **Maintenance Strategies:**
+  - Regular updates are scheduled both for security patches and performance improvements.
+  - Automated alerts notify administrators of any failures in scraping, email dispatching, or other key functionalities.
+
+## 9. Conclusion and Overall Backend Summary
+
+In summary, the Network Brain v4 backend is built on a robust, cloud-first foundation benefiting from Supabase’s managed PostgreSQL services and Vercel’s hosting for the frontend interface. Key highlights include:
+
+- A modular and scalable backend architecture integrating data capture, enrichment, AI-generated content, and robust logging.
+- A clear database schema that supports a wide variety of data points and ensures auditability.
+- RESTful API endpoints that provide reliable and consistent communication between the frontend and backend, with error handling and type safety at the forefront.
+- Secure hosting solutions, complemented by thorough security protocols (Google OAuth, encrypted data, audit logging) and a solid monitoring infrastructure.
+
+This backend strategy not only meets current requirements but is also designed to scale gracefully, maintain high performance, and adapt to future needs and integrations.
+
+---
+
+This document provides an overarching view of the backend structure that aligns with the project's goals and user requirements. Its modular design and clear delineation of responsibilities make it a strong foundation for future expansion and feature implementation.

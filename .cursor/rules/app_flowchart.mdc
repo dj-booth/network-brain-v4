@@ -1,0 +1,22 @@
+---
+description: Apply these rules when making changes to the project
+globs:
+alwaysApply: true
+---
+
+Update this rule if user requested changes to the project requirement, etc.
+flowchart TD
+    A[Typeform Submission] --> B[Zapier Webhook]
+    B --> C[Supabase Database]
+    C --> D[Profile Created]
+    D --> E[MCP Scraper]
+    E --> F[Profile Enriched]
+    E -->|Scrape Failure| G[Show Alert]
+    F --> H[AI Generated Embeddings]
+    F --> I[Credibility Score Calculation]
+    F --> J[Audit Logs Update]
+    C --> K[Admin Dashboard]
+    K --> L[Profile View]
+    K --> M[Email Interface]
+    M --> N[Gmail Draft and Send]
+    N --> J

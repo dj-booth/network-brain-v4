@@ -1,0 +1,104 @@
+---
+description: Apply these rules when making changes to the project
+globs:
+alwaysApply: true
+---
+
+Update this rule if user requested changes to the project requirement, etc.
+# Frontend Guideline Document for Network Brain v4
+
+This document provides a clear overview of the frontend architecture, design principles, and technologies used in the Network Brain v4 project. It is intended for all team members, ensuring a shared understanding of how the frontend is structured, styled, and maintained.
+
+## 1. Frontend Architecture
+
+Network Brain v4 leverages modern frontend frameworks to deliver a fast and intuitive admin tool. The primary technologies in use are:
+
+- **React Native**: Used to build the admin dashboard, profile view, and email interface. This allows the admin tool to be both mobile-friendly and performant.
+- **Next.js**: Utilized for its server-side rendering and routing capabilities, ensuring fast loads and smooth transitions in the web interface.
+- **TypeScript**: Employed throughout the project for enhanced type safety and clarity, as well as to reduce runtime errors.
+
+The overall architecture emphasizes a clear separation between client and server components. This means that UI components (frontend) communicate with backend services (Supabase, PostgreSQL) through clearly defined APIs. This separation supports scalability, maintainability, and performance through modular development practices and standardized communication protocols.
+
+## 2. Design Principles
+
+The frontend design is driven by key principles that help maintain a consistent and user-friendly interface:
+
+- **Usability**: Every element on the screen is designed to be easy to use and understand. The admin dashboard prioritizes clarity, ensuring that even non-technical users can navigate the system effortlessly.
+- **Accessibility**: The layout and component design adhere to standard accessibility guidelines. This ensures that the application is usable for everyone and provides options such as clear contrast, descriptive alt labels, and keyboard navigation support.
+- **Responsiveness**: The UI is built with responsiveness in mind so that it looks and functions well on a variety of screen sizes, from desktops to mobile devices.
+
+These principles are carefully integrated into the design process, from wireframing to the final implementation of interactive features like profile edits and email drafting.
+
+## 3. Styling and Theming
+
+The styling approach aligns with modern design standards while keeping the interface elegant and consistent:
+
+- **CSS Methodologies**: We adopt a component-based approach using methodologies like BEM (Block Element Modifier) to keep styles organized and predictable. Additionally, utility-first frameworks (e.g., Tailwind CSS or similar) can be leveraged for quick styling iterations with consistency.
+
+- **Pre-Processors and Frameworks**: SASS may be used for advanced styling requirements, ensuring that variables, mixins, and functions are managed centrally.
+
+- **Theming**: The application follows a clean and modern flat design with hints of glassmorphism for subtle depth. The overall styling is modern and business-like, suitable for an admin dashboard.
+
+- **Color Palette**:
+  - Background: RGB(243, 244, 246)
+  - Text: RGB(66, 66, 69)
+  - Buttons and Accents: RGB(255, 196, 3)
+
+- **Fonts**: While a specific font is not mandated explicitly, we lean toward clear, readable, and modern sans-serif fonts (e.g., Inter, Roboto) that align well with the design principles and corporate look of an admin tool.
+
+## 4. Component Structure
+
+The project follows a component-based architecture, meaning that the user interface is built out of small, reusable pieces. This modular design ensures:
+
+- **Reusability**: Common components like buttons, inputs, and card layouts are created once and reused throughout the app. This not only speeds up development but also keeps the UI consistent.
+- **Separation of Concerns**: Each component is responsible for a single part of the UI. This makes the code easier to understand, test, and maintain.
+- **Organization**: Components are organized in a predictable folder structure—grouped by feature or domain—making it easy for developers to locate and update parts of the UI.
+
+## 5. State Management
+
+Managing application state in a robust and scalable way is key to ensuring a seamless user experience. Our state management approach includes:
+
+- **Local vs. Global State**: Local component state is managed with React’s built-in hooks, while global state is managed using libraries such as the Context API or Redux when needed. This separation helps in quickly identifying where data is coming from and how it flows through the application.
+- **Type Safety & Validation**: With TypeScript, we define clear types for all state objects and use tools like Zod for runtime validation. This practice was emphasized following lessons learned from previous project versions.
+
+## 6. Routing and Navigation
+
+Navigating through Network Brain v4 is made simple and efficient by using the routing capabilities of our chosen frameworks:
+
+- **Next.js Routing**: The file-based routing system in Next.js automatically sets up routes for different pages of the admin tool. This approach minimizes configuration and speeds up development.
+- **React Native Navigation**: For the mobile admin dashboard, libraries like React Navigation help manage in-app transitions and navigation between various screens such as the dashboard, profile view, and email interface.
+
+This routing setup ensures that users can easily log in, view profiles, edit details, and send emails, all while keeping the user experience fluid and intuitive.
+
+## 7. Performance Optimization
+
+To guarantee a fast and responsive application, several performance optimization strategies are implemented:
+
+- **Lazy Loading & Code Splitting**: Components and assets that are not immediately needed are loaded only when required, reducing initial load times.
+- **Server-Side Rendering (SSR) and Static Generation**: Next.js’s SSR capabilities are leveraged to improve the speed and SEO of the admin dashboard, providing a seamless experience right out of the gate.
+- **Asset Optimization**: Images, fonts, and other assets are optimized using modern build tools and practices to ensure that they don’t slow down the application.
+
+These measures contribute to reduced latency and improved performance, which are critical for an admin instrument where every second counts.
+
+## 8. Testing and Quality Assurance
+
+Ensuring that the frontend code is robust and reliable is a priority for Network Brain v4. Our testing strategies include:
+
+- **Unit Testing**: Individual components are tested using libraries such as Jest and React Testing Library to catch bugs at the component level.
+- **Integration Testing**: We ensure that various parts of the application interact correctly, particularly the communication between state management, UI components, and routing.
+- **End-to-End (E2E) Testing**: Tools like Cypress are used to simulate real user scenarios and interactions, ensuring that workflows (e.g., logging in, editing profiles, and sending emails) function as intended.
+- **CI/CD Integration**: Automated testing is integrated into the continuous integration/continuous deployment pipeline. This means that tests run every time a change is made, ensuring that only quality code is deployed.
+
+## 9. Conclusion and Overall Frontend Summary
+
+The frontend setup for Network Brain v4 is designed with a strong focus on clarity, responsiveness, and maintainability. By leveraging React Native, Next.js, and TypeScript, we ensure that the platform is both modern and robust. Key aspects of this setup include:
+
+- A clearly defined architecture that separates client and server responsibilities.
+- A design process centered on usability, accessibility, and responsive design tailored to an admin dashboard.
+- A modular component structure that promotes reuse and smooth onboarding for new team members.
+- Effective state management and optimized routing that make navigation feel seamless and natural.
+- Built-in performance optimization techniques and comprehensive testing strategies that guarantee both speed and reliability.
+
+This guideline document is intended to serve as a north star for the frontend team, ensuring that every piece of the UI aligns perfectly with project goals while offering a codebase that is maintainable and scalable. The careful attention to design and technical detail not only differentiates Network Brain v4 from previous versions but also sets a strong foundation for future enhancements.
+
+We hope this document provides clear and actionable insights into the frontend architecture and design of Network Brain v4. Happy coding!

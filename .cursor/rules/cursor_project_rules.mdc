@@ -1,0 +1,79 @@
+---
+description: Apply these rules when making changes to the project
+globs:
+alwaysApply: true
+---
+
+Update this rule if user requested changes to the project requirement, etc.
+## Project Overview
+
+* **Type:** Admin Backend Tool
+* **Description:** Network Brain v4 is an admin-only backend tool designed for capturing, enriching, and leveraging profile information. It integrates data capture from Formless.ai (via Typeform), profile enrichment via a browser-based MCP scraper, AI-generated embeddings for introduction drafts, and Gmail integration for communication thereby streamlining the introduction process for the admin user.
+* **Primary Goal:** Streamline personalized introductions for the admin user
+
+## Project Structure
+
+### Framework-Specific Routing
+
+* **Directory Rules:**
+  * **Next.js 14 (App Router):** Uses the `app/` directory with nested route folders following the `app/[route]/page.tsx` conventions. This ensures alignment with React Server Components (RSCs) and modern routing patterns.
+  * Example 1: "Next.js 14 (App Router)" → `app/[route]/page.tsx` conventions
+  * Example 2: "Next.js (Pages Router)" → Not applicable as the App Router pattern is enforced
+  * Example 3: "React Router 6" → For non-next projects, would use `src/routes/` with `createBrowserRouter`
+
+### Core Directories
+
+* **Versioned Structure:**
+  * **app/api:** Designed for Next.js 14 API routes with Route Handlers to process server-side logic, such as profile data ingestion and Azure integrations.
+  * **app/dashboard:** Contains layout and route files for the admin UI built with React Native components blended within a Next.js application.
+  * **src/components:** (If needed) for shared React Native components adjusted to web usage
+
+### Key Files
+
+* **Stack-Versioned Patterns:**
+  * **app/dashboard/layout.tsx:** Implements the root layout for the admin dashboard, adhering to Next.js 14 conventions utilizing App Router.
+  * **app/auth/login/page.tsx:** Dedicated for handling Google OAuth authentication using server actions.
+
+## Tech Stack Rules
+
+* **Version Enforcement:**
+  * **next@14:** Enforce the App Router pattern. No use of `getInitialProps` is allowed, and all server components must be placed in the `app/` directory.
+  * **React Native (Latest):** Should maintain best practices for component usage and mobile-web adaptations.
+  * **TypeScript (Latest):** Enforce strict typing, using runtime validation with tools like Zod when necessary.
+
+## PRD Compliance
+
+* **Non-Negotiable:**
+  * "MCP Server must limit web scraping to 50 LinkedIn profiles per day, with error alerts on the profile page if scraping fails."
+  * "Gmail integration is restricted to drafting and sending emails with a mandatory BCC to intros@somethingnew.nz, without inbox read capabilities."
+
+## App Flow Integration
+
+* **Stack-Aligned Flow:**
+  * Next.js 14 Auth Flow → `app/auth/login/page.tsx` uses server actions to enforce Google OAuth and secure the admin dashboard.
+  * Dashboard flows (profile viewing, edits, error alerts) are routed via `app/dashboard/` ensuring a seamless admin experience.
+
+## Best Practices
+
+* **React Native**
+  * Use a component-based architecture to keep UI elements reusable and maintainable.
+  * Leverage StyleSheet for modular, performance-optimized styling.
+  * Prioritize accessibility and responsiveness across devices.
+
+* **Next.js**
+  * Capitalize on server components and the app directory for optimal performance.
+  * Use Static Generation (SSG) and Incremental Static Regeneration (ISR) where applicable to enhance speed and caching.
+  * Maintain a clear separation between server and client code to avoid performance pitfalls and ensure security.
+
+* **TypeScript**
+  * Enforce strict type-safety throughout the codebase to reduce runtime errors.
+  * Utilize type inference and interface segregation for clean, maintainable code architecture.
+  * Implement runtime validation with tools like Zod or Yup to safeguard data integrity.
+
+## Rules
+
+* Derive folder/file patterns **directly** from the tech stack documentation and version specifics.
+* If Next.js 14 App Router is in use: Enforce the `app/` directory with nested route folders.
+* If Pages Router is opted-out: Avoid usage of `pages/*.tsx` flat structure.
+* Mirror this routing logic for other frameworks such as React Router, SvelteKit, etc., as per their version specifications.
+* Never mix version patterns (e.g., no `pages/` directory in App Router projects).

@@ -1,0 +1,82 @@
+---
+description: Apply these rules when making changes to the project
+globs:
+alwaysApply: true
+---
+
+Update this rule if user requested changes to the project requirement, etc.
+# Network Brain v4 - Tech Stack Document
+
+This document explains our technology choices in everyday language. It’s meant for anyone—even non-technical readers—to understand why each part of our system is in place and how it contributes to our overall goals. Below is a breakdown of our tech stack.
+
+## Frontend Technologies
+
+Our frontend is focused on delivering a clean, intuitive interface for a smooth admin experience. Here’s what we’re using:
+
+- **React Native**: This is the framework for our admin interface. It allows us to build a responsive and interactive dashboard that looks great on multiple devices. The UI design fits our specific color scheme and easy-to-read text.
+
+- **Next.js**: While originally known for server-rendered sites, Next.js is used here to provide a flexible hybrid frontend that can efficiently serve both dynamic and static content. It bridges our backend and frontend to ensure fast page loads and smooth interactions.
+
+- **TypeScript**: This is essentially JavaScript with added safety and structure. It helps catch errors early and makes the code more reliable, which means our interface runs smoothly and is easier to maintain over time.
+
+- **Styling Tools and Design Guidelines**: We use design and styling libraries that adhere to our color scheme (light background with R243 G244 B246; text R66 G66 B69; buttons and accents R255 G196 B3). All these choices help create an uncluttered, enjoyable user experience.
+
+## Backend Technologies
+
+The backend is the powerhouse of our application, handling data, security, and integrations smoothly. The technologies we use include:
+
+- **Supabase and PostgreSQL**: Supabase acts as our backend-as-a-service, while PostgreSQL is the relational database where all data is stored. This includes profiles, AI-generated content, logs, and more. Using these together ensures reliable data storage and scalable performance.
+
+- **Google OAuth**: This allows our single admin user to log in with a secure Google account. It ensures that every session is authenticated and that your data remains protected.
+
+- **Zapier**: Zapier handles the connection between Formless.ai (Typeform submissions) and our Supabase database. It automates the data capture process, meaning that profiles are created in real time with every submission.
+
+- **MCP Scraper**: This tool is responsible for automatically enriching each profile by gathering additional information from external sites like LinkedIn. It operates on a set schedule and flags any issues via alert notifications.
+
+- **AI Embedding Engine**: This engine generates summaries for introductions, matches, and reasons to introduce. It uses the collected data from various sources to create editable, context-aware content which the admin can refine in the interface.
+
+## Infrastructure and Deployment
+
+The choices we’ve made for hosting and deployment help to keep the system quick to update, easy to monitor, and reliable as it grows in usage.
+
+- **Vercel Deployment**: We deploy the application through Vercel, a reliable hosting platform known for its simplicity, speed, and scalability. This helps us roll out updates and new features quickly.
+
+- **CI/CD Pipelines**: Continuous Integration and Continuous Deployment pipelines are established to automatically test and deploy new code. This means that updates are less likely to break functionality and any issues can be caught early.
+
+- **Version Control (Git)**: All changes are tracked using a version control system. This not only helps multiple developers collaborate effectively but also ensures every change can be reviewed and, if necessary, rolled back.
+
+## Third-Party Integrations
+
+To extend our functionality without reinventing the wheel, we've integrated several third-party tools:
+
+- **Google OAuth & Gmail**: Google OAuth secures access to the admin panel, while Gmail integration (using OAuth as well) allows users to draft and send emails directly from the application. An additional BCC logging mechanism (to intros@somethingnew.nz) keeps all communications recorded.
+
+- **Zapier**: As mentioned earlier, Zapier helps automate the link between Formless submissions and our database, making it seamless for data to flow into our system.
+
+## Security and Performance Considerations
+
+Trust and reliability are at the heart of our system. To ensure that, we’ve implemented the following security and performance measures:
+
+- **Authentication and Data Protection**: Google OAuth ensures that access is secure. The strict use of Supabase and PostgreSQL with well-designed schemas means that data is stored securely and remains consistent.
+
+- **Comprehensive Logging and Audit Trails**: Every significant action such as profile creations, edits, scraping operations, and email send events are logged. This makes troubleshooting and monitoring easy, while also supporting system accountability.
+
+- **Error Handling and Alerts**: The system is designed to display clear, prominent error messages (e.g., when MCP scraping fails or if Gmail drafting encounters an issue) directly in the admin interface so that the user is immediately aware and can act as needed.
+
+- **Optimized Performance**: By leveraging the efficiencies of Next.js and Vercel as well as ensuring that heavy operations (like the MCP scraping) are controlled and scheduled, we can keep our application running smoothly even as data grows.
+
+## Conclusion and Overall Tech Stack Summary
+
+In summary, our tech stack for Network Brain v4 is designed with clarity, security, and scalability in mind. Here’s how all the pieces fit together:
+
+- The **frontend** using React Native, Next.js, and TypeScript provides an intuitive and reliable admin interface that adheres to our specific design guidelines.
+
+- The **backend** powered by Supabase and PostgreSQL, with automated data capture via Zapier, and enhanced by the MCP scraper and AI Embedding Engine, forms a robust backbone for managing profiles and communications.
+
+- Our **infrastructure** leveraging Vercel guarantees fast deployments and reliability, while CI/CD pipelines and Git ensure smooth operations and collaboration.
+
+- **Third-party integrations** like Google OAuth, Gmail, and Zapier enhance our capabilities and ensure the system remains both secure and efficient.
+
+The chosen technologies work together seamlessly to fulfill the product requirements of automating profile enrichment and managing secure, effective communications—all while providing a smooth, maintainable, and scalable solution. This tech stack not only meets the current needs of the platform but also sets a strong foundation for future enhancements and integrations.
+
+Thank you for taking the time to understand our choices. Each component has been carefully selected to support a powerful, user-focused experience for managing network profiles and communications.

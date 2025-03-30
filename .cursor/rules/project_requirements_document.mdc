@@ -1,0 +1,204 @@
+---
+description: Apply these rules when making changes to the project
+globs:
+alwaysApply: true
+---
+
+Update this rule if user requested changes to the project requirement, etc.
+# Project Requirements Document (PRD) for Network Brain v4
+
+## 1. Project Overview
+
+Network Brain v4 is an admin-only backend tool designed to capture, enrich, and leverage contextual profile information about individuals. The tool gathers initial user data from Formless.ai via Typeform submissions, then immediately populates a Supabase database using a Zapier webhook. Once the data is stored, a browser-based MCP scraper automatically enriches the profiles with extra data from platforms like LinkedIn and other external websites. In addition, AI-generated embeddings provide auto-created summaries and introductions that can be later reviewed and edited by the admin.
+
+This tool is built to streamline personalized communication and introductions by harnessing data enrichment, automated AI-driven content, and Gmail integration. The primary objective is to empower an admin (currently only one admin user is in mind) to have a clear, actionable view of incoming profiles, enriched data, and AI suggestions, all within a simple, clean interface. With clear audit logging and built-in error alerts, the project aims to simplify manual data corrections while providing a solid foundation for future scalability and integration.
+
+## 2. In-Scope vs. Out-of-Scope
+
+### In-Scope
+
+*   **Data Capture**
+
+    *   Capturing initial profile info via Formless.ai (Typeform submissions) with instant ingestion into the Supabase database via Zapier webhook.
+
+*   **Profile Enrichment**
+
+    *   Automated browser-based scraping (MCP server) for gathering supplemental data from LinkedIn and other external sources.
+    *   Initial scrape upon profile creation and scheduled re-scrape every 3 months.
+    *   Daily cap for LinkedIn scrapes (50 profiles per day).
+
+*   **AI-Generated Embeddings & Credibility Scoring**
+
+    *   Generating three types of AI embeddings: introductions draft, introductions sought, and reasons to introduce.
+    *   Creating a subjective credibility score from 0.000 to 10.000, with in-app admin edit capability.
+
+*   **Gmail Integration**
+
+    *   Drafting and sending personalized emails via Gmail OAuth.
+    *   Automated BCC logging to a dedicated email (<intros@somethingnew.nz>) that updates the database.
+
+*   **Audit Logging & Alerts**
+
+    *   Detailed logging of profile creations, edits, scraping events, embedding changes, email drafts, and sends.
+    *   Display error alerts on profiles when a scrape or email drafting fails.
+
+*   **Admin UI**
+
+    *   A clean, responsive React Native admin interface with a dashboard view, detailed profile view, and integrated email drafting interface.
+    *   Designed aesthetics with a background color of RGB(243,244,246), text color of RGB(66,66,69), and buttons/accents in RGB(255,196,3).
+
+### Out-of-Scope
+
+*   **Multiple Admin Users & Role Management**
+
+    *   For this version, the admin interface will support only one user (the main admin).
+
+*   **Extended Gmail API Capabilities**
+
+    *   No mailbox reading, reply tracking, or advanced Gmail features beyond drafting and sending emails.
+
+*   **External CRM or Airtable Integrations**
+
+    *   Integration with external data sources or other CRMs is not planned for this version.
+
+*   **Unbounded MCP Scraping**
+
+    *   The system will adhere to the daily cap of 50 profiles; any scrapes beyond this limit are out-of-scope.
+
+*   **Advanced Customization or External Branding Features**
+
+    *   Future iterations may offer enhanced customization options, but this version will focus solely on the outlined UI and workflow.
+
+## 3. User Flow
+
+When the admin visits the application, they are greeted by a simple login screen where they must authenticate using Google OAuth. After a successful login, the admin is presented with a clean and straightforward dashboard summarizing recent profiles, recent actions, and any system alerts (like failed scrapes). The dashboard employs the provided color scheme and typography for clarity and consistency, ensuring the admin can quickly navigate to further details without distractions.
+
+After reviewing the dashboard, the admin can click into any detailed profile view. Here, they see a structured layout that includes the initial data captured via Formless.ai, enriched data from the MCP scraper, and auto-generated AI embeddings (draft introductions, connections sought, and reasons to introduce). The admin can review, edit, or adjust the AI-generated credibility score and other profile details using a built-in WYSIWYG editor. Additionally, if an email needs to be sent, the admin can switch to the integrated Gmail interface to draft and send the email, with every action logged in the underlying system for full auditability.
+
+## 4. Core Features
+
+*   **Data Capture**
+
+    *   Integration with Formless.ai (via Typeform) to capture initial profile details.
+    *   Automated population of the Supabase database using Zapier webhook.
+
+*   **Profile Enrichment**
+
+    *   Activation of a browser-based MCP scraper that supplements profiles with additional data from LinkedIn and external sites.
+    *   Scheduled re-scrapes every 3 months.
+    *   Daily LinkedIn scrape limit of 50 profiles.
+
+*   **AI-Generated Embeddings**
+
+    *   Creation of three types of embeddings: intro drafts, introductions sought, and reasons to introduce.
+    *   Embedding summaries generated using contextual data for later review and editing.
+
+*   **Credibility Scoring**
+
+    *   AI-driven subjective credibility score between 0.000 and 10.000, based on enriched data.
+    *   Editable directly by the admin via the interface.
+
+*   **Gmail Integration**
+
+    *   OAuth-based Gmail integration for drafting and sending emails directly from the tool.
+    *   Automatic BCC logging to the dedicated intro email, ensuring communication records are maintained.
+
+*   **Audit Logging and Error Alerts**
+
+    *   Comprehensive logging for all key actions: profile creation, editing, scraping events, embedding and score adjustments, email sends.
+    *   Immediate error alert notifications displayed atop a profile if a process (like scraping or email drafting) fails.
+
+*   **Admin Interface**
+
+    *   A responsive React Native dashboard presenting profiles, alerts, and editing capabilities.
+    *   UI designed with predetermined color schemes and styles (background, text, buttons).
+
+## 5. Tech Stack & Tools
+
+*   **Frontend Frameworks & Languages**
+
+    *   React Native for the admin interface.
+    *   Next.js for possible server-side rendering and web dashboard.
+    *   TypeScript to ensure strong type safety and consistency.
+
+*   **Backend & Database**
+
+    *   Supabase as the backend service hosting PostgreSQL.
+    *   PostgreSQL for structured data storage and defined schema relationships.
+
+*   **Authentication & API Integrations**
+
+    *   Google OAuth for secure admin login and Gmail integration.
+    *   Zapier for automating data capture from Formless.ai submissions.
+    *   MCP scraper (browser-based) for collecting and enriching profile data.
+    *   AI embedding engine for generating introduction drafts and credibility scoring.
+
+*   **Deployment & IDE Tools**
+
+    *   Deployed on Vercel.
+    *   Utilizing Cursor as an advanced IDE offering real-time suggestions and AI-powered coding assistance.
+
+## 6. Non-Functional Requirements
+
+*   **Performance**
+
+    *   API responses and data processing should remain within acceptable load times even with the enrichment and scraping processes.
+    *   The system must reliably handle daily limits (e.g., 50 MCP scrapes) without significant delays.
+
+*   **Security**
+
+    *   Use of Google OAuth ensures secure login and access control.
+    *   Data stored in Supabase must be protected with best practices and secure access measures.
+
+*   **Usability**
+
+    *   The admin interface is designed to be simple, consistent, and responsive.
+    *   Real-time alerts and error messages should be prominently displayed to guide the admin.
+
+*   **Auditability**
+
+    *   Every significant action (profile changes, score adjustments, email sends) is logged with metadata to allow full audit trails.
+    *   Logs should be searchable to help diagnose issues and review past actions.
+
+## 7. Constraints & Assumptions
+
+*   **Constraints**
+
+    *   The system is designed for one admin user initially (using Google OAuth) with potential for future role expansion.
+    *   Daily limits for MCP scraping (50 profiles per day) must be strictly enforced.
+    *   Gmail integration is limited to draft and send functionality; no inbox reading or advanced tracking is performed.
+
+*   **Assumptions**
+
+    *   All data sources (Formless.ai, LinkedIn, Gmail) are assumed to be available and stable during operations.
+    *   The MCP scraper relies on browser-based operations which may occasionally be subject to changes on external sites.
+    *   The overall architecture does not anticipate a high volume of simultaneous users since it is admin-only.
+    *   Early-stage AI embeddings and credibility scores serve as guidelines for the admin and are fully editable via the interface.
+
+## 8. Known Issues & Potential Pitfalls
+
+*   **API Rate Limiting & Scraping Challenges**
+
+    *   There may be rate limitations or changes in external platforms (LinkedIn, etc.) that could interrupt the MCP scraping process.
+    *   To mitigate, display specific error alerts on the admin profile page and log detailed error metadata for troubleshooting.
+
+*   **Data Integrity & Type Mismatches**
+
+    *   As past versions have struggled with schema mismatches and type safety, ensure complete and strict type definitions using TypeScript and possibly Zod for runtime validations.
+    *   Maintain a clear separation between authentication profiles and member profiles to secure data integrity.
+
+*   **Email Integration Reliability**
+
+    *   Issues may arise from Gmail OAuth integration or network fluctuations; error messaging and fallback processes should notify the admin immediately.
+    *   A dedicated error message area on the profile can provide instant feedback if email drafting or sending fails.
+
+*   **Scalability**
+
+    *   Though current performance expectations are modest (50 daily scrapes and admin-only access), careful monitoring and logging must be in place to identify potential slowdowns as data volume grows.
+    *   Regular performance reviews and the use of server components where applicable are recommended to maintain scalability.
+
+*   **Audit Logging Overhead**
+
+    *   The high volume of activity logs might create performance bottlenecks. A strategy for efficient log indexing and potential archiving should be considered as the system matures.
+
+This document forms the main brain for generating subsequent technical documents. It outlines exactly what needs to be built, how various components integrate, and what operational guidelines to follow. Every detail from data capturing and enrichment to error handling is clearly communicated for an unambiguous implementation of Network Brain v4.
