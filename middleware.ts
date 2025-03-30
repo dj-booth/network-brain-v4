@@ -57,5 +57,5 @@ export function middleware(request: NextRequest) {
 
 // Apply this middleware only to API routes
 export const config = {
-  matcher: '/api/:path*',
+  matcher: ['/api/:path*', '/api/'], // Explicitly include /api/ itself
 }; 
