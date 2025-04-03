@@ -25,6 +25,8 @@ import { Button } from './ui/button'
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuTrigger } from './ui/dropdown-menu'
 import { Columns, UserPlus } from 'lucide-react'
 import { useRouter } from 'next/navigation'
+import { createClientComponentClient } from '@supabase/auth-helpers-nextjs'
+import { useColumnStore } from '@/app/lib/columnStore'
 
 type Profile = Database['public']['Tables']['profiles']['Row']
 
@@ -38,6 +40,8 @@ export function DataTable({ data, columns }: DataTableProps) {
   const [sorting, setSorting] = useState<SortingState>([])
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([])
   const [rowSelection, setRowSelection] = useState<RowSelectionState>({})
+  const supabase = createClientComponentClient<Database>()
+  const getColumnConfig = useColumnStore(state => state.getColumnConfig)
 
   const table = useReactTable({
     data,
@@ -54,6 +58,26 @@ export function DataTable({ data, columns }: DataTableProps) {
       rowSelection,
     },
     enableRowSelection: true,
+    meta: {
+      updateData: async (profileId: string, columnId: string, value: any) => {
+        try {
+          // Update the profile in Supabase
+          const { error } = await supabase
+            .from('profiles')
+            .update({ [columnId]: value })
+            .eq('id', profileId)
+            
+          if (error) {
+            console.error('Error updating profile:', error)
+            return
+          }
+          
+          console.log(`Updated ${columnId} for profile ${profileId} to:`, value)
+        } catch (error) {
+          console.error('Error in updateData:', error)
+        }
+      },
+    },
   })
   
   // Hide ID column by default
@@ -91,6 +115,12 @@ export function DataTable({ data, columns }: DataTableProps) {
       // Navigate to the intros page with the selected profiles
       router.push(`/intros?ids=${selectedRows.map(row => row.id).join(',')}`)
     }
+  }
+
+  // Helper to determine if a cell is a select field
+  const isSelectField = (columnId: string) => {
+    const config = getColumnConfig(columnId)
+    return config.type === 'single-select' || config.type === 'multi-select'
   }
 
   return (
@@ -151,7 +181,7 @@ export function DataTable({ data, columns }: DataTableProps) {
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
-                  <TableHead key={header.id}>
+                  <TableHead key={header.id} className="group">
                     {header.isPlaceholder
                       ? null
                       : flexRender(
@@ -172,7 +202,10 @@ export function DataTable({ data, columns }: DataTableProps) {
                   data-state={row.getIsSelected() ? "selected" : undefined}
                 >
                   {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
+                    <TableCell 
+                      key={cell.id}
+                      className={isSelectField(cell.column.id) ? 'p-2' : undefined}
+                    >
                       {flexRender(cell.column.columnDef.cell, cell.getContext())}
                     </TableCell>
                   ))}

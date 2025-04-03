@@ -1,11 +1,100 @@
 'use client'
 
+import React from 'react'
 import { ColumnDef } from '@tanstack/react-table'
 import { Database } from '@/types/supabase'
 import Link from 'next/link'
-import { Checkbox } from '../components/ui/checkbox'
+import { Checkbox } from './ui/checkbox'
+import { ColumnTypeSelector, ColumnType } from './ui/column-type-selector'
+import { useColumnStore } from '@/app/lib/columnStore'
+import { SingleSelectField } from './ui/single-select-field'
+import { MultiSelectField } from './ui/multi-select-field'
 
 type Profile = Database['public']['Tables']['profiles']['Row']
+
+function TableHeader({ column }: { column: any }) {
+  const columnId = column.id;
+  const columnConfig = useColumnStore(state => state.getColumnConfig(columnId));
+  const setColumnType = useColumnStore(state => state.setColumnType);
+  
+  const handleTypeChange = (type: ColumnType) => {
+    setColumnType(columnId, type);
+  };
+
+  return (
+    <div className="flex items-center group">
+      <span className="capitalize">{columnId.replace(/_/g, ' ')}</span>
+      <ColumnTypeSelector 
+        columnId={columnId} 
+        currentType={columnConfig.type} 
+        onTypeChange={handleTypeChange}
+      />
+    </div>
+  );
+}
+
+function TableCell({ 
+  value, 
+  row, 
+  column,
+  table
+}: { 
+  value: any, 
+  row: any, 
+  column: any,
+  table: any
+}) {
+  const columnId = column.id;
+  const columnConfig = useColumnStore(state => state.getColumnConfig(columnId));
+  const columnOptions = useColumnStore(state => state.getColumnOptions(columnId));
+  const addColumnOption = useColumnStore(state => state.addColumnOption);
+  const profileId = row.original.id;
+  
+  // Get the updateData function from table.options.meta
+  const updateData = table.options.meta?.updateData;
+  
+  // Handle updates to profile fields
+  const updateProfileField = async (fieldValue: any) => {
+    if (updateData) {
+      updateData(profileId, columnId, fieldValue);
+    } else {
+      console.warn('updateData function not available');
+    }
+  };
+  
+  if (columnConfig.type === 'single-select') {
+    return (
+      <SingleSelectField
+        value={value as string | null}
+        options={columnOptions}
+        onChange={(newValue) => updateProfileField(newValue)}
+        onAddOption={(option) => addColumnOption(columnId, option)}
+      />
+    );
+  }
+  
+  if (columnConfig.type === 'multi-select') {
+    // Convert string value to array if needed (e.g., if stored as comma-separated)
+    let values: string[] = [];
+    if (Array.isArray(value)) {
+      values = value;
+    } else if (typeof value === 'string' && value) {
+      values = value.split(',').map(v => v.trim());
+    }
+    
+    return (
+      <MultiSelectField
+        values={values}
+        options={columnOptions}
+        onChange={(newValues) => updateProfileField(newValues.join(','))}
+        onAddOption={(option) => addColumnOption(columnId, option)}
+      />
+    );
+  }
+  
+  // Default text display
+  return value || '—';
+}
 
 export const columns: ColumnDef<Profile>[] = [
   {
@@ -37,7 +126,7 @@ export const columns: ColumnDef<Profile>[] = [
   },
   {
     accessorKey: 'id',
-    header: 'ID',
+    header: ({ column }) => <TableHeader column={column} />,
     cell: ({ row }) => {
       const id = row.getValue('id') as string
       return (
@@ -51,194 +140,63 @@ export const columns: ColumnDef<Profile>[] = [
   },
   {
     accessorKey: 'full_name',
-    header: 'Name',
-    cell: ({ row }) => {
+    header: ({ column }) => <TableHeader column={column} />,
+    cell: ({ row, getValue }) => {
       const id = row.original.id
+      const value = getValue() as string | null
+      
+      // Special handling for full_name to make it a link
       return (
         <Link href={`/profiles/${id}`} className="font-medium text-blue-600 hover:underline">
-          {row.getValue('full_name')}
+          {value || '—'}
         </Link>
       )
     },
     enableHiding: false,
   },
-  {
-    accessorKey: 'email',
-    header: 'Email',
-    cell: ({ row }) => row.getValue('email') || '—',
-    enableHiding: true,
+]
+
+// Define additional columns dynamically
+const additionalColumns: ColumnDef<Profile>[] = [
+  'email',
+  'phone',
+  'linkedin',
+  'location',
+  'referral_source',
+  'current_plan',
+  'startup_name',
+  'cofounders_context',
+  'startup_differentiator',
+  'startup_validation',
+  'job_search_preferences',
+  'inspiring_companies',
+  'hypothetical_startup_idea',
+  'timeline_to_start',
+  'skillset',
+  'skillset_extra',
+  'additional_interests',
+  'desired_introductions',
+  'long_term_goal',
+  'nomination',
+  'new_start_behavior',
+  'discomfort_trigger',
+  'group_dynamics',
+  'core_values',
+  'motivation_type',
+  'stress_response',
+  'focus_area',
+  'self_description',
+  'decision_style',
+  'failure_response',
+].map(key => ({
+  accessorKey: key,
+  header: ({ column }) => <TableHeader column={column} />,
+  cell: ({ getValue, row, column, table }) => {
+    const value = getValue()
+    return <TableCell value={value} row={row} column={column} table={table} />
   },
-  {
-    accessorKey: 'phone',
-    header: 'Phone',
-    cell: ({ row }) => row.getValue('phone') || '—',
-    enableHiding: true,
-  },
-  {
-    accessorKey: 'linkedin',
-    header: 'LinkedIn',
-    cell: ({ row }) => {
-      const linkedin = row.getValue('linkedin') as string | null
-      return linkedin ? (
-        <Link href={linkedin} target="_blank" className="text-blue-600 hover:underline">
-          Profile
-        </Link>
-      ) : '—'
-    },
-    enableHiding: true,
-  },
-  {
-    accessorKey: 'location',
-    header: 'Location',
-    cell: ({ row }) => row.getValue('location') || '—',
-    enableHiding: true,
-  },
-  {
-    accessorKey: 'referral_source',
-    header: 'Referral Source',
-    cell: ({ row }) => row.getValue('referral_source') || '—',
-    enableHiding: true,
-  },
-  {
-    accessorKey: 'current_plan',
-    header: 'Current Plan',
-    cell: ({ row }) => row.getValue('current_plan') || '—',
-    enableHiding: true,
-  },
-  {
-    accessorKey: 'startup_name',
-    header: 'Startup Name',
-    cell: ({ row }) => row.getValue('startup_name') || '—',
-    enableHiding: true,
-  },
-  {
-    accessorKey: 'cofounders_context',
-    header: 'Cofounders Context',
-    cell: ({ row }) => row.getValue('cofounders_context') || '—',
-    enableHiding: true,
-  },
-  {
-    accessorKey: 'startup_differentiator',
-    header: 'Startup Differentiator',
-    cell: ({ row }) => row.getValue('startup_differentiator') || '—',
-    enableHiding: true,
-  },
-  {
-    accessorKey: 'startup_validation',
-    header: 'Startup Validation',
-    cell: ({ row }) => row.getValue('startup_validation') || '—',
-    enableHiding: true,
-  },
-  {
-    accessorKey: 'job_search_preferences',
-    header: 'Job Search Preferences',
-    cell: ({ row }) => row.getValue('job_search_preferences') || '—',
-    enableHiding: true,
-  },
-  {
-    accessorKey: 'inspiring_companies',
-    header: 'Inspiring Companies',
-    cell: ({ row }) => row.getValue('inspiring_companies') || '—',
-    enableHiding: true,
-  },
-  {
-    accessorKey: 'hypothetical_startup_idea',
-    header: 'Hypothetical Startup Idea',
-    cell: ({ row }) => row.getValue('hypothetical_startup_idea') || '—',
-    enableHiding: true,
-  },
-  {
-    accessorKey: 'timeline_to_start',
-    header: 'Timeline to Start',
-    cell: ({ row }) => row.getValue('timeline_to_start') || '—',
-    enableHiding: true,
-  },
-  {
-    accessorKey: 'skillset',
-    header: 'Skillset',
-    cell: ({ row }) => row.getValue('skillset') || '—',
-    enableHiding: true,
-  },
-  {
-    accessorKey: 'skillset_extra',
-    header: 'Additional Skills',
-    cell: ({ row }) => row.getValue('skillset_extra') || '—',
-    enableHiding: true,
-  },
-  {
-    accessorKey: 'additional_interests',
-    header: 'Additional Interests',
-    cell: ({ row }) => row.getValue('additional_interests') || '—',
-    enableHiding: true,
-  },
-  {
-    accessorKey: 'desired_introductions',
-    header: 'Desired Introductions',
-    cell: ({ row }) => row.getValue('desired_introductions') || '—',
-    enableHiding: true,
-  },
-  {
-    accessorKey: 'long_term_goal',
-    header: 'Long Term Goal',
-    cell: ({ row }) => row.getValue('long_term_goal') || '—',
-    enableHiding: true,
-  },
-  {
-    accessorKey: 'sentiment',
-    header: 'Sentiment',
-    cell: ({ row }) => row.getValue('sentiment') || '—',
-    enableHiding: true,
-  },
-  {
-    accessorKey: 'summary',
-    header: 'Summary',
-    cell: ({ row }) => row.getValue('summary') || '—',
-    enableHiding: true,
-  },
-  {
-    accessorKey: 'transcript',
-    header: 'Transcript',
-    cell: ({ row }) => row.getValue('transcript') || '—',
-    enableHiding: true,
-  },
-  {
-    accessorKey: 'credibility_score',
-    header: 'Credibility Score',
-    cell: ({ row }) => {
-      const score = row.getValue('credibility_score') as number | null
-      return score !== null && score !== undefined 
-        ? score.toFixed(3) 
-        : '—'
-    },
-    enableHiding: true,
-  },
-  {
-    accessorKey: 'submitted_at',
-    header: 'Submitted',
-    cell: ({ row }) => {
-      const date = row.getValue('submitted_at')
-      if (!date) return '—'
-      // Format date using native JavaScript Date
-      const d = new Date(date as string)
-      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
-      return `${months[d.getMonth()]} ${d.getDate()}, ${d.getFullYear()}`
-    },
-    enableHiding: true,
-  },
-  {
-    accessorKey: 'completed',
-    header: 'Completed',
-    cell: ({ row }) => {
-      return row.getValue('completed') ? (
-        <span className="inline-flex items-center rounded-full bg-green-100 px-2.5 py-0.5 text-xs font-medium text-green-800">
-          Yes
-        </span>
-      ) : (
-        <span className="inline-flex items-center rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-800">
-          No
-        </span>
-      )
-    },
-    enableHiding: true,
-  },
-] 
+  enableHiding: true,
+}));
+
+// Add all additional columns to the main columns array
+columns.push(...additionalColumns); 

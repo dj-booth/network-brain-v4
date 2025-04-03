@@ -38,7 +38,8 @@
     "react-voice-visualizer": "^2.0.8",
     "tailwind-merge": "^3.1.0",
     "uuid": "^11.1.0",
-    "zod": "^3.22.4"
+    "zod": "^3.22.4",
+    "zustand": "^5.0.3"
   },
   "devDependencies": {
     "@supabase/supabase-js": "^2.49.4",
