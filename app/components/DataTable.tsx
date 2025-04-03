@@ -20,7 +20,6 @@ import {
   TableHeader, 
   TableRow 
 } from './ui/table'
-import { DataTableFilter } from './ui/data-table-filter'
 import { Database } from '@/types/supabase'
 import { Button } from './ui/button'
 import { DropdownMenu, DropdownMenuCheckboxItem, DropdownMenuContent, DropdownMenuTrigger } from './ui/dropdown-menu'
@@ -98,7 +97,6 @@ export function DataTable({ data, columns }: DataTableProps) {
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2">
-          <DataTableFilter table={table} />
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" size="sm" className="h-8">
