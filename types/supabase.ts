@@ -177,18 +177,11 @@ export type Database = {
           additional_interests: string | null
           cofounders_context: string | null
           completed: boolean | null
-          core_values: string | null
           credibility_score: number | null
           current_plan: string | null
-          decision_style: string | null
           desired_introductions: string | null
-          discomfort_trigger: string | null
           email: string | null
-          failure_response: string | null
-          final_notes: string | null
-          focus_area: string | null
           full_name: string
-          group_dynamics: string | null
           hypothetical_startup_idea: string | null
           id: string
           inspiring_companies: string | null
@@ -197,21 +190,16 @@ export type Database = {
           linkedin: string | null
           location: string | null
           long_term_goal: string | null
-          motivation_type: string | null
-          new_start_behavior: string | null
-          nomination: string | null
           phone: string | null
           profile_created_at: string | null
           profile_picture_url: string | null
           referral_source: string | null
-          self_description: string | null
           sentiment: string | null
           skillset: string | null
           skillset_extra: string | null
           startup_differentiator: string | null
           startup_name: string | null
           startup_validation: string | null
-          stress_response: string | null
           submitted_at: string | null
           summary: string | null
           timeline_to_start: string | null
@@ -221,18 +209,11 @@ export type Database = {
           additional_interests?: string | null
           cofounders_context?: string | null
           completed?: boolean | null
-          core_values?: string | null
           credibility_score?: number | null
           current_plan?: string | null
-          decision_style?: string | null
           desired_introductions?: string | null
-          discomfort_trigger?: string | null
           email?: string | null
-          failure_response?: string | null
-          final_notes?: string | null
-          focus_area?: string | null
           full_name: string
-          group_dynamics?: string | null
           hypothetical_startup_idea?: string | null
           id?: string
           inspiring_companies?: string | null
@@ -241,21 +222,16 @@ export type Database = {
           linkedin?: string | null
           location?: string | null
           long_term_goal?: string | null
-          motivation_type?: string | null
-          new_start_behavior?: string | null
-          nomination?: string | null
           phone?: string | null
           profile_created_at?: string | null
           profile_picture_url?: string | null
           referral_source?: string | null
-          self_description?: string | null
           sentiment?: string | null
           skillset?: string | null
           skillset_extra?: string | null
           startup_differentiator?: string | null
           startup_name?: string | null
           startup_validation?: string | null
-          stress_response?: string | null
           submitted_at?: string | null
           summary?: string | null
           timeline_to_start?: string | null
@@ -265,18 +241,11 @@ export type Database = {
           additional_interests?: string | null
           cofounders_context?: string | null
           completed?: boolean | null
-          core_values?: string | null
           credibility_score?: number | null
           current_plan?: string | null
-          decision_style?: string | null
           desired_introductions?: string | null
-          discomfort_trigger?: string | null
           email?: string | null
-          failure_response?: string | null
-          final_notes?: string | null
-          focus_area?: string | null
           full_name?: string
-          group_dynamics?: string | null
           hypothetical_startup_idea?: string | null
           id?: string
           inspiring_companies?: string | null
@@ -285,21 +254,16 @@ export type Database = {
           linkedin?: string | null
           location?: string | null
           long_term_goal?: string | null
-          motivation_type?: string | null
-          new_start_behavior?: string | null
-          nomination?: string | null
           phone?: string | null
           profile_created_at?: string | null
           profile_picture_url?: string | null
           referral_source?: string | null
-          self_description?: string | null
           sentiment?: string | null
           skillset?: string | null
           skillset_extra?: string | null
           startup_differentiator?: string | null
           startup_name?: string | null
           startup_validation?: string | null
-          stress_response?: string | null
           submitted_at?: string | null
           summary?: string | null
           timeline_to_start?: string | null

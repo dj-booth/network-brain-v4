@@ -1,0 +1,101 @@
+/* Basic styling for the modal */
+#network-brain-modal {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  width: 450px; /* Slightly wider */
+  background-color: white;
+  border: 1px solid #ccc;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  padding: 25px;
+  z-index: 10000; /* Ensure it's on top */
+  border-radius: 8px;
+  font-family: sans-serif;
+}
+
+#network-brain-modal h2 {
+  margin-top: 0;
+  color: #333;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 15px;
+  margin-bottom: 20px;
+}
+
+#network-brain-modal label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: bold;
+  color: #555;
+}
+
+#network-brain-modal textarea {
+  width: calc(100% - 20px); /* Adjust for padding */
+  padding: 10px;
+  margin-bottom: 20px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  min-height: 100px; /* Increased height */
+  resize: vertical;
+  font-size: 14px;
+}
+
+.voice-controls {
+  display: flex;
+  align-items: center;
+  margin-bottom: 20px;
+  gap: 10px; /* Add space between buttons */
+}
+
+.voice-controls button {
+  padding: 8px 12px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.voice-controls #record-button {
+  background-color: #dc3545; /* Red for record */
+  color: white;
+}
+.voice-controls #record-button:disabled {
+  background-color: #f8d7da;
+  cursor: not-allowed;
+}
+
+.voice-controls #stop-button {
+  background-color: #6c757d; /* Gray for stop */
+  color: white;
+}
+.voice-controls #stop-button:disabled {
+  background-color: #e2e6ea;
+  cursor: not-allowed;
+}
+
+.voice-controls #recording-status {
+  font-style: italic;
+  color: #666;
+}
+
+.action-buttons {
+    margin-top: 15px;
+    text-align: right;
+}
+
+.action-buttons button {
+  padding: 10px 15px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  margin-left: 10px;
+}
+
+.action-buttons button#submit-context {
+  background-color: #0a66c2; /* LinkedIn blue */
+  color: white;
+}
+
+.action-buttons button#cancel-context {
+  background-color: #eee;
+  color: #333;
+} 

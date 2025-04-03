@@ -1,0 +1,49 @@
+{
+  "manifest_version": 3,
+  "name": "Network Brain LinkedIn Importer",
+  "version": "0.1.0",
+  "description": "Extracts LinkedIn profile data and sends it to Network Brain.",
+  "permissions": [
+    "storage",
+    "identity"
+  ],
+  "host_permissions": [
+    "https://*.linkedin.com/*"
+  ],
+  "icons": {
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "content_scripts": [
+    {
+      "matches": ["https://*.linkedin.com/in/*"],
+      "js": ["dist/content/content.js"]
+    }
+  ],
+  "background": {
+    "service_worker": "dist/background/background.js"
+  },
+  "action": {
+    "default_popup": "dist/popup/popup.html",
+    "default_icon": {
+        "16": "icons/icon16.png",
+        "48": "icons/icon48.png"
+    }
+  },
+  "web_accessible_resources": [
+    {
+      "resources": [ 
+          "src/ui/modal.html", 
+          "src/ui/modal.css", 
+          "dist/ui/modal.js",
+          "dist/popup/popup.html"
+       ], 
+      "matches": [ "https://*.linkedin.com/*" ]
+    }
+  ],
+  "oauth2": {
+    "client_id": "927186761014-qvlrncaockfamh3td9ip9h5q4756on2e.apps.googleusercontent.com",
+    "scopes": ["openid", "email", "profile"]
+  }
+} 

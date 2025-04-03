@@ -1,21 +1,28 @@
 'use client';
 
 import React from 'react';
-import Link from 'next/link';
+import { usePathname } from 'next/navigation';
 
 export const Header = () => {
+  const pathname = usePathname() || '/';
+  
+  // Get the page title based on the current route
+  const getPageTitle = () => {
+    if (pathname === '/') return 'Directory';
+    if (pathname === '/context' || pathname.startsWith('/context/')) return 'Context';
+    if (pathname === '/dashboard/calendar' || pathname.startsWith('/dashboard/calendar/')) return 'Events';
+    if (pathname === '/intros' || pathname.startsWith('/intros/')) return 'Introductions';
+    if (pathname === '/import' || pathname.startsWith('/import/')) return 'Import Data';
+    if (pathname === '/auth/google' || pathname.startsWith('/auth/google/')) return 'Connect Google';
+    if (pathname === '/settings' || pathname.startsWith('/settings/')) return 'Settings';
+    return 'Network Brain';
+  };
+
   return (
-    <header className="sticky top-0 z-50 w-full bg-white shadow-md">
-      <nav className="container mx-auto px-4 py-3 flex justify-between items-center">
-        <Link href="/" className="text-xl font-bold text-gray-800 hover:text-indigo-600">
-          Network Brain v4
-        </Link>
-        <Link href="/import">
-          <button className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500">
-            Import Data
-          </button>
-        </Link>
-      </nav>
+    <header className="sticky top-0 z-40 w-full bg-white shadow-sm border-b border-gray-200">
+      <div className="container mx-auto px-6 py-4">
+        <h1 className="text-xl font-semibold text-[rgb(66,66,69)]">{getPageTitle()}</h1>
+      </div>
     </header>
   );
 }; 

@@ -1,16 +1,17 @@
 import { NextResponse } from 'next/server';
-import { OpenAI } from 'openai';
-import jwt from 'jsonwebtoken'; // Import jsonwebtoken
+import OpenAI from 'openai';
+import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs';
+import { cookies } from 'next/headers';
 
 // --- IMPORTANT ---
 // Ensure you have OPENAI_API_KEY and JWT_SECRET set in your environment variables
 // You will also need to install the openai package: npm install openai
 // and a JWT library like jsonwebtoken: npm install jsonwebtoken @types/jsonwebtoken
 
-// Initialize OpenAI client only when API is actually called, not during build
-let openai: OpenAI | null = null;
-
-const JWT_SECRET = process.env.JWT_SECRET;
+// Initialize OpenAI client
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
 
 // Allow specific Chrome extension origin
 const ALLOWED_ORIGIN = 'chrome-extension://pofgfedjebidalhfhhfdbajjihnfamen'; // Use single value
@@ -27,103 +28,68 @@ function addCorsHeaders(response: NextResponse, requestOrigin: string | null) {
   return response;
 }
 
+// This is a stub API route for audio transcription
+// In a real implementation, this would use OpenAI's Whisper API
+
 export async function POST(request: Request) {
-  console.log("Received POST request on /api/transcribe");
-  const origin = request.headers.get('origin');
-
-  // Initialize OpenAI client only when needed
-  if (!openai && process.env.OPENAI_API_KEY) {
-    openai = new OpenAI({
-      apiKey: process.env.OPENAI_API_KEY,
-    });
-  }
-
-  // 1. Authentication: Verify JWT token
-  if (!JWT_SECRET) {
-    console.error("Server Configuration Error: JWT_SECRET is not set.");
-    const response = NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
-    return addCorsHeaders(response, origin);
-  }
-
-  const authHeader = request.headers.get('Authorization');
-  if (!authHeader || !authHeader.startsWith('Bearer ')) {
-    console.error("Authentication error: No Bearer token provided.");
-    const response = NextResponse.json({ error: 'Unauthorized: Missing token' }, { status: 401 });
-    return addCorsHeaders(response, origin);
-  }
-  const token = authHeader.split(' ')[1];
-
   try {
-    // --- Actual JWT Verification ---
-    const decoded = jwt.verify(token, JWT_SECRET) as jwt.JwtPayload;
-    console.log("JWT Decoded for transcribe:", decoded);
+    const { audio, profileId } = await request.json();
+    
+    // Check if we received audio data
+    if (!audio) {
+      return NextResponse.json(
+        { error: 'No audio data provided' },
+        { status: 400 }
+      );
+    }
 
-    // Optional: Perform necessary checks on decoded payload (e.g., check email against ADMIN_EMAIL if needed here too)
-    // if (decoded.email !== process.env.ADMIN_EMAIL) { ... }
-
+    console.log(`Processing audio recording for profile: ${profileId}`);
+    
+    try {
+      // Convert base64 to buffer
+      const buffer = Buffer.from(audio, 'base64');
+      
+      // Create a temporary file with the audio data
+      const audioBlob = new Blob([buffer], { type: 'audio/webm' });
+      const file = new File([audioBlob], 'audio.webm', { type: 'audio/webm' });
+      
+      // Call OpenAI's Whisper API to transcribe the audio
+      const transcription = await openai.audio.transcriptions.create({
+        file: file,
+        model: 'whisper-1',
+      });
+      
+      console.log('Transcription successful');
+      
+      // Return the transcribed text
+      return NextResponse.json({
+        text: transcription.text
+      });
+    } catch (error: unknown) {
+      console.error('OpenAI API error:', error);
+      
+      // Check if there's an API key configuration issue
+      const errorMessage = error instanceof Error ? error.message : String(error);
+      
+      if (errorMessage.includes('API key')) {
+        return NextResponse.json(
+          { error: 'OpenAI API key configuration issue', details: errorMessage },
+          { status: 500 }
+        );
+      }
+      
+      // For other OpenAI errors, return a general error
+      return NextResponse.json(
+        { error: 'Transcription service error', details: errorMessage },
+        { status: 500 }
+      );
+    }
   } catch (error) {
-    console.error("Authentication error: Invalid token", error);
-    let errorResponse;
-    if (error instanceof jwt.TokenExpiredError) {
-        errorResponse = NextResponse.json({ error: 'Unauthorized: Token expired' }, { status: 401 });
-    }
-    else if (error instanceof jwt.JsonWebTokenError) {
-         errorResponse = NextResponse.json({ error: 'Unauthorized: Invalid token' }, { status: 401 });
-    }
-    else {
-      // Generic fallback
-      errorResponse = NextResponse.json({ error: 'Unauthorized: Invalid token' }, { status: 401 });
-    }
-    return addCorsHeaders(errorResponse, origin);
-  }
-
-  // 2. Parse FormData and Extract Audio File
-  let audioFile: File | null = null;
-  try {
-    const formData = await request.formData();
-    const fileEntry = formData.get('file'); // Matches the key used in modal.ts
-
-    if (!fileEntry || !(fileEntry instanceof File)) {
-      console.error("Bad Request: 'file' field missing or not a File in FormData.");
-      const response = NextResponse.json({ error: "Bad Request: Missing audio file" }, { status: 400 });
-      return addCorsHeaders(response, origin);
-    }
-    audioFile = fileEntry;
-    console.log(`Received audio file: ${audioFile.name}, size: ${audioFile.size}, type: ${audioFile.type}`);
-
-  } catch (error) {
-    console.error("Error parsing FormData:", error);
-    const response = NextResponse.json({ error: 'Bad Request: Invalid FormData' }, { status: 400 });
-    return addCorsHeaders(response, origin);
-  }
-
-  // 3. Transcribe using OpenAI Whisper API
-  if (!openai) {
-     console.error("Server Configuration Error: OPENAI_API_KEY is not set.");
-     const response = NextResponse.json({ error: 'Server configuration error' }, { status: 500 });
-     return addCorsHeaders(response, origin);
-  }
-
-  try {
-    console.log("Sending audio to OpenAI Whisper API...");
-    const transcription = await openai.audio.transcriptions.create({
-      file: audioFile, // Pass the File object directly
-      model: 'whisper-1',
-      // language: 'en', // Optional: Specify language if needed
-      // response_format: 'json' // Default is json
-    });
-
-    console.log("Transcription successful:", transcription);
-
-    // Return only the text part of the transcription
-    const response = NextResponse.json({ text: transcription.text }, { status: 200 });
-    return addCorsHeaders(response, origin);
-
-  } catch (error: any) {
-    console.error("Error calling OpenAI Whisper API:", error);
-    const errorMessage = error.response ? JSON.stringify(error.response.data) : error.message;
-    const response = NextResponse.json({ error: `OpenAI API Error: ${errorMessage}` }, { status: 500 });
-    return addCorsHeaders(response, origin);
+    console.error('Error in transcribe API:', error);
+    return NextResponse.json(
+      { error: 'Failed to process audio transcription' },
+      { status: 500 }
+    );
   }
 }
 

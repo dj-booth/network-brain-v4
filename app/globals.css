@@ -6,6 +6,28 @@
   --foreground-rgb: 66, 66, 69;
   --background-rgb: 243, 244, 246;
   --accent-rgb: 255, 196, 3;
+
+  --border: 220 13% 91%;
+  --input: 220 13% 91%;
+  --ring: 213 10% 45%;
+  --radius: 0.5rem;
+
+  --destructive: 0 84.2% 60.2%;
+  --destructive-foreground: 210 40% 98%;
+
+  --muted: 220 14.3% 95.9%;
+  --muted-foreground: 220 8.9% 46.1%;
+}
+
+@layer utilities {
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  
+  .no-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
 }
 
 body {

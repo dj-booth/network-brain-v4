@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Network Brain</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      width: 300px;
+      padding: 15px;
+    }
+    button {
+      margin-top: 10px;
+      padding: 8px 12px;
+      background-color: #4285f4;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #3367d6;
+    }
+    button:disabled {
+      background-color: #cccccc;
+      cursor: not-allowed;
+    }
+    #status {
+      margin: 10px 0;
+      padding: 10px;
+      background-color: #f5f5f5;
+      border-radius: 4px;
+    }
+    #logoutButton {
+      display: none;
+      background-color: #ea4335;
+    }
+    #logoutButton:hover {
+      background-color: #d33426;
+    }
+  </style>
+</head>
+<body>
+  <h2>Network Brain</h2>
+  <div id="status">Checking authentication status...</div>
+  <button id="loginButton">Login with Google</button>
+  <button id="logoutButton">Logout</button>
+  <script src="popup.js"></script>
+</body>
+</html> 

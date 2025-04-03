@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Add Context</title>
+  <link rel="stylesheet" href="modal.css">
+</head>
+<body>
+<div id="network-brain-modal">
+  <h2>Add Context</h2>
+
+  <div>
+    <label for="context-notes">Context:</label>
+    <textarea id="context-notes" placeholder="Type context here or use the voice recorder..."></textarea>
+  </div>
+
+  <div class="voice-controls">
+    <button id="record-button">Record</button>
+    <button id="stop-button" disabled>Stop</button>
+    <span id="recording-status"></span>
+  </div>
+
+  <div class="action-buttons">
+    <button id="submit-context">Submit Context</button>
+    <button id="cancel-context">Cancel</button>
+  </div>
+</div>
+<script src="dist/ui/modal.js"></script> 
+</body>
+</html> 

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, ChangeEvent, FormEvent, useEffect } from 'react';
+import React, { useState, ChangeEvent, FormEvent } from 'react';
 // import Papa from 'papaparse'; // Temporarily commented out
 import { Database } from '@/types/supabase';
 
@@ -15,7 +15,6 @@ type ProfileColumn = keyof ProfileRow;
 // IMPORTANT: Ensure 'id', 'profile_created_at', 'last_scraped_at' or other auto-generated/non-importable columns are handled.
 const ALL_PROFILE_COLUMNS: ProfileColumn[] = [
   // List essential and importable columns from your 'profiles' table here
-  // Example columns - **REPLACE/ADD based on your actual schema!**
   'full_name', 
   'email',
   'phone',
@@ -36,18 +35,6 @@ const ALL_PROFILE_COLUMNS: ProfileColumn[] = [
   'additional_interests',
   'desired_introductions',
   'long_term_goal',
-  'nomination',
-  'new_start_behavior',
-  'discomfort_trigger',
-  'group_dynamics',
-  'core_values',
-  'motivation_type',
-  'stress_response',
-  'focus_area',
-  'self_description',
-  'decision_style',
-  'failure_response',
-  'final_notes',
   'sentiment',
   'summary',
   'transcript',
@@ -65,6 +52,7 @@ export default function ImportPage() {
   const [mapping, setMapping] = useState<Record<string, ProfileColumn | ''>>({});
   const [importStatus, setImportStatus] = useState<string>('');
   const [isLoading, setIsLoading] = useState<boolean>(false);
+  const [activeTab, setActiveTab] = useState<'csv' | 'spreadsheet'>('csv');
 
   const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -105,7 +93,6 @@ export default function ImportPage() {
         initialMapping[header] = ''; // Default to ignore
       });
       setMapping(initialMapping);
-
     }
   };
 
@@ -156,85 +143,142 @@ export default function ImportPage() {
   };
 
   return (
-    <div className="container mx-auto p-8">
-      <h1 className="text-2xl font-bold mb-6">Import Profiles from CSV</h1>
-
-      <form onSubmit={handleSubmit} className="space-y-6 bg-white p-6 rounded shadow-md">
-        <div>
-          <label htmlFor="csvFile" className="block text-sm font-medium text-gray-700 mb-1">
-            CSV File (Parsing Disabled for Debugging)
-          </label>
-          <input
-            type="file"
-            id="csvFile"
-            accept=".csv"
-            onChange={handleFileChange}
-            required
-            className="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none"
-          />
-        </div>
-
-        {csvHeaders.length > 0 && (
-          <div>
-            <h2 className="text-lg font-semibold mb-3">Map CSV Columns to Database Fields (Dummy Headers)</h2>
-            <p className="text-sm text-gray-600 mb-4">Select the corresponding database field for each column in your CSV. Choose "-- Ignore --" to skip a column.</p>
-            <div className="overflow-x-auto">
-              <table className="min-w-full divide-y divide-gray-200 border">
-                <thead className="bg-gray-50">
-                  <tr>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      CSV Column Header
-                    </th>
-                    <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                      Database Profile Field
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {csvHeaders.map((header: string) => { 
-                    const isMapped = mapping[header] !== '';
-                    return (
-                      <tr key={header}>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{header}</td>
-                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                          <select
-                            value={mapping[header] || ''}
-                            onChange={(e) => handleMappingChange(header, e.target.value as ProfileColumn | '')}
-                            className={`mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md ${isMapped ? 'bg-green-50' : 'bg-red-50'}`}
-                          >
-                            <option value="">-- Ignore --</option>
-                            {ALL_PROFILE_COLUMNS.map(col => (
-                              <option key={col} value={col}>{col}</option>
-                            ))}
-                          </select>
-                        </td>
-                      </tr>
-                    );
-                  })}
-                </tbody>
-              </table>
+    <div className="container mx-auto p-6">
+      <div className="bg-white p-6 rounded-lg shadow mb-6">
+        <h2 className="text-xl font-semibold mb-4">Import Data</h2>
+        <p className="text-gray-600 mb-4">
+          Import profiles and other data from various sources.
+        </p>
+      </div>
+      
+      {/* Tabs */}
+      <div className="flex border-b border-gray-200 mb-6">
+        <button
+          className={`px-4 py-2 font-medium text-sm ${activeTab === 'csv' ? 'border-b-2 border-[rgb(255,196,3)] text-[rgb(66,66,69)]' : 'text-gray-500 hover:text-gray-700'}`}
+          onClick={() => setActiveTab('csv')}
+        >
+          CSV Import
+        </button>
+        <button
+          className={`px-4 py-2 font-medium text-sm ${activeTab === 'spreadsheet' ? 'border-b-2 border-[rgb(255,196,3)] text-[rgb(66,66,69)]' : 'text-gray-500 hover:text-gray-700'}`}
+          onClick={() => setActiveTab('spreadsheet')}
+        >
+          Spreadsheet Import
+        </button>
+      </div>
+      
+      {/* CSV Import Form */}
+      {activeTab === 'csv' && (
+        <div className="bg-white p-6 rounded-lg shadow">
+          <form onSubmit={handleSubmit} className="space-y-6">
+            <div>
+              <label htmlFor="csvFile" className="block text-sm font-medium text-gray-700 mb-1">
+                CSV File
+              </label>
+              <input
+                type="file"
+                id="csvFile"
+                accept=".csv"
+                onChange={handleFileChange}
+                className="block w-full text-sm text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 focus:outline-none p-2"
+              />
+              <p className="mt-1 text-xs text-gray-500">
+                Select a CSV file with profile data. Headers should match database fields.
+              </p>
             </div>
-          </div>
-        )}
 
-        {csvFile && csvHeaders.length > 0 && (
-           <div>
-             <button
-               type="submit"
-               disabled={isLoading || true} // Disable button
-               className="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-indigo-600 hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 disabled:opacity-50"
-             >
-               {isLoading ? 'Importing...' : 'Import Data (Disabled)'}
-             </button>
-           </div>
-        )}
-       
-        {importStatus && (
-          <div className={`mt-4 p-4 rounded ${importStatus.startsWith('Import successful') ? 'bg-green-100 text-green-800' : importStatus.includes('disabled') ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'}`}>
-            <p>{importStatus}</p>
+            {csvHeaders.length > 0 && (
+              <div>
+                <h3 className="text-lg font-medium mb-3">Map CSV Columns to Database Fields</h3>
+                <p className="text-sm text-gray-600 mb-4">Select the corresponding database field for each column in your CSV.</p>
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200 border">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          CSV Column Header
+                        </th>
+                        <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Database Profile Field
+                        </th>
+                      </tr>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {csvHeaders.map((header: string) => { 
+                        const isMapped = mapping[header] !== '';
+                        return (
+                          <tr key={header}>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900">{header}</td>
+                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                              <select
+                                value={mapping[header] || ''}
+                                onChange={(e) => handleMappingChange(header, e.target.value as ProfileColumn | '')}
+                                className={`block w-full px-3 py-2 border rounded-md shadow-sm text-sm ${isMapped ? 'bg-green-50 border-green-300' : 'bg-red-50 border-red-300'}`}
+                              >
+                                <option value="">-- Ignore --</option>
+                                {ALL_PROFILE_COLUMNS.map(col => (
+                                  <option key={col} value={col}>{col}</option>
+                                ))}
+                              </select>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
+            {csvFile && csvHeaders.length > 0 && (
+              <div>
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-black bg-[rgb(255,196,3)] hover:bg-opacity-90 focus:outline-none disabled:opacity-50"
+                >
+                  {isLoading ? 'Importing...' : 'Import Data'}
+                </button>
+              </div>
+            )}
+          
+            {importStatus && (
+              <div className={`mt-4 p-4 rounded ${importStatus.startsWith('Import successful') ? 'bg-green-100 text-green-800' : importStatus.includes('disabled') ? 'bg-yellow-100 text-yellow-800' : 'bg-red-100 text-red-800'}`}>
+                <p>{importStatus}</p>
+              </div>
+            )}
+          </form>
+        </div>
+      )}
+      
+      {/* Spreadsheet Import Panel */}
+      {activeTab === 'spreadsheet' && (
+        <div className="bg-white p-6 rounded-lg shadow">
+          <h3 className="text-lg font-medium mb-3">Import from Spreadsheet</h3>
+          <p className="text-gray-600 mb-4">
+            Connect to a Google Sheets or Excel file to import profile data.
+          </p>
+          <div className="mb-6">
+            <label htmlFor="spreadsheetUrl" className="block text-sm font-medium text-gray-700 mb-2">
+              Spreadsheet URL
+            </label>
+            <input
+              type="text"
+              id="spreadsheetUrl"
+              placeholder="https://docs.google.com/spreadsheets/d/..."
+              className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-[rgb(255,196,3)] focus:border-[rgb(255,196,3)]"
+            />
           </div>
-        )}
-      </form>
+          <button 
+            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-black bg-[rgb(255,196,3)] hover:bg-opacity-90 focus:outline-none"
+          >
+            Connect Spreadsheet
+          </button>
+          <p className="mt-4 text-xs text-gray-500">
+            Note: This feature is coming soon. Currently in development.
+          </p>
+        </div>
+      )}
     </div>
   );
 } 
