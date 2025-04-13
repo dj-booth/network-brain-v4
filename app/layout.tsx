@@ -2,6 +2,7 @@ import React from 'react';
 import './globals.css';
 import { Inter } from 'next/font/google';
 import { Header } from './components/Header';
+import 'semantic-ui-css/semantic.min.css';
 
 const inter = Inter({ subsets: ['latin'] });
 
